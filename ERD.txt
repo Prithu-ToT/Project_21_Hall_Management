@@ -1,0 +1,83 @@
+Table Student {
+  student_id varchar [pk]
+  student_name varchar[50] [not null]
+  gender_isMale bool 
+  dept_name varchar [not null]
+  phone_number varchar
+  room_number varchar
+  hall_name varchar
+  semester INT [note: "Current semester of the student"]
+}
+
+ref: Student.(hall_name, room_number) > Room.(hall_name, room_number)
+
+Table Room{
+  hall_name varchar
+  room_number varchar
+  students_number varchar [note: "How many students are staying there"]
+  table_count INT 
+  wardrobe_count INT 
+  
+  // composite primary key
+  indexes {
+    (hall_name, room_number) [pk]
+  }  
+}
+ref: Room.hall_name > Hall.hall_name
+
+Table Hall{
+  hall_name varchar [pk]
+  student_capacity varchar
+  provost_name varchar
+  provost_contact varchar
+  office_contanct varchar
+  emergency_contact varchar
+}
+
+Table StudentFees {
+  fee_id varchar [pk]
+  fee_type varchar [note: "HF, DF"]
+  amount varchar
+  issue_date varchar
+  status varchar [note :"Paid,Pending,Rejected,Overdue"]
+  payment_date varchar
+  transaction_id varchar [unique]
+  issuing_hall varchar
+  paid_by_student varchar
+}
+
+ref : StudentFees.issuing_hall > Hall.hall_name
+ref : StudentFees.paid_by_student > Student.student_id
+
+Table StaffSalary {
+  payment_id varchar [pk]
+  amount varchar
+  issue_date varchar
+  status varchar [note :"Paid,Pending,Rejected,Overdue"]
+  payment_date varchar
+  transaction_id varchar
+  issuing_hall varchar
+  paid_to varchar
+}
+
+Table Issue {
+  room_number varchar
+  hall_name varchar
+  raised_by varchar
+  description varchar
+  resolved_by_student bool
+  resolved_by_office bool
+}
+
+Table Staff {
+  staff_id varchar [pk]
+  job varchar [note : "sickboy, office_assistant etc"]
+  name varchar
+  hall_name varchar
+  salary number
+  phone_number varchar
+}
+
+Ref: StaffSalary.issuing_hall > Hall.hall_name
+Ref: StaffSalary.paid_to > Staff.staff_id
+Ref: Issue.(hall_name, room_number) > Room.(hall_name, room_number)
