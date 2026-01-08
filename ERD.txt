@@ -1,83 +1,128 @@
-Table Student {
-  student_id varchar [pk]
-  student_name varchar[50] [not null]
-  gender_isMale bool 
-  dept_name varchar [not null]
+Table Person {
+  person_id varchar [pk, note: "Surrogate key to match with id"]
+  full_name varchar [not null]
+  gender enum('Male','Female','Other') [not null]
+  date_of_birth date
   phone_number varchar
-  room_number varchar
-  hall_name varchar
-  semester INT [note: "Current semester of the student"]
 }
 
-ref: Student.(hall_name, room_number) > Room.(hall_name, room_number)
-
-Table Room{
-  hall_name varchar
-  room_number varchar
-  students_number varchar [note: "How many students are staying there"]
-  table_count INT 
-  wardrobe_count INT 
-  
-  // composite primary key
-  indexes {
-    (hall_name, room_number) [pk]
-  }  
+Table PersonIdentity {
+  identity_id varchar [pk, note: "Surrogate key: matches with person info"]
+  person_id varchar [not null]
+  id_type enum('BirthCertificate','NationalID') [not null]
+  id_number varchar [unique, not null]
+  issued_date date
 }
-ref: Room.hall_name > Hall.hall_name
 
-Table Hall{
+Ref: PersonIdentity.person_id > Person.person_id
+
+Table Department {
+  dept_id varchar [pk]
+  dept_name varchar [unique, not null]
+}
+
+Table Hall {
   hall_name varchar [pk]
-  student_capacity varchar
+  hall_gender enum('Male','Female') [not null]
+  student_capacity int
   provost_name varchar
   provost_contact varchar
-  office_contanct varchar
+  office_contact varchar
   emergency_contact varchar
 }
 
-Table StudentFees {
-  fee_id varchar [pk]
-  fee_type varchar [note: "HF, DF"]
-  amount varchar
-  issue_date varchar
-  status varchar [note :"Paid,Pending,Rejected,Overdue"]
-  payment_date varchar
-  transaction_id varchar [unique]
-  issuing_hall varchar
-  paid_by_student varchar
-}
-
-ref : StudentFees.issuing_hall > Hall.hall_name
-ref : StudentFees.paid_by_student > Student.student_id
-
-Table StaffSalary {
-  payment_id varchar [pk]
-  amount varchar
-  issue_date varchar
-  status varchar [note :"Paid,Pending,Rejected,Overdue"]
-  payment_date varchar
-  transaction_id varchar
-  issuing_hall varchar
-  paid_to varchar
-}
-
-Table Issue {
-  room_number varchar
+Table Room {
   hall_name varchar
-  raised_by varchar
-  description varchar
-  resolved_by_student bool
-  resolved_by_office bool
+  room_number varchar
+  table_count int
+  wardrobe_count int
+
+  indexes {
+    (hall_name, room_number) [pk]
+  }
 }
+
+Ref: Room.hall_name > Hall.hall_name
+
+Table Student {
+  student_id varchar [pk, note: "2305152 typa thing"]
+  person_id varchar [unique, not null]
+  dept_id varchar [not null]
+  semester int
+}
+
+Ref: Student.person_id > Person.person_id
+Ref: Student.dept_id > Department.dept_id
 
 Table Staff {
-  staff_id varchar [pk]
-  job varchar [note : "sickboy, office_assistant etc"]
-  name varchar
+  staff_id varchar [pk, note: "Not sure, putted some pk"]
+  person_id varchar [unique, not null]
   hall_name varchar
-  salary number
-  phone_number varchar
+  job varchar
+  base_salary number
 }
 
-Ref: StaffSalary.issuing_hall > Hall.hall_name
-Ref: StaffSalary.paid_to > Staff.staff_id
+Ref: Staff.person_id > Person.person_id
+Ref: Staff.hall_name > Hall.hall_name
+
+Table RoomAllocation {
+  allocation_id varchar [pk, note: "Surrogate key: made from student + transaction"]
+  student_id varchar [not null]
+  hall_name varchar [not null]
+  room_number varchar [not null]
+  start_date date [not null]
+  end_date date
+}
+
+Ref: RoomAllocation.student_id > Student.student_id
+Ref: RoomAllocation.(hall_name, room_number) > Room.(hall_name, room_number)
+
+Table Payment {
+  payment_id varchar [pk, note: "Surrogate key: not sure, may only use transaction id"]
+  amount number [not null]
+  issue_date date [not null]
+  payment_date date
+  status enum('Paid','Pending','Rejected','Overdue') [not null]
+  transaction_id varchar [unique]
+  hall_name varchar
+}
+
+Ref: Payment.hall_name > Hall.hall_name
+
+Table StudentPayment {
+  payment_id varchar [pk]
+  allocation_id varchar [not null]
+  student_id varchar [not null]
+  fee_type enum('HF','DF') [not null]
+  waiver number
+  late_fee number
+}
+
+Ref: StudentPayment.payment_id > Payment.payment_id
+Ref: StudentPayment.student_id > Student.student_id
+Ref: StudentPayment.allocation_id > RoomAllocation.allocation_id
+
+Table StaffPayment {
+  payment_id varchar [pk]
+  staff_id varchar [not null]
+  bonus number
+}
+
+Ref: StaffPayment.payment_id > Payment.payment_id
+Ref: StaffPayment.staff_id > Staff.staff_id
+
+Table Issue {
+  issue_id varchar [pk, note: "Surrogate key: Not sure, may delete"]
+  hall_name varchar
+  room_number varchar
+  raised_by_student varchar
+  assigned_staff varchar
+  status enum('Open','In Progress','Resolved','Closed')
+  description varchar
+  raised_date date
+  resolved_date date
+}
+
 Ref: Issue.(hall_name, room_number) > Room.(hall_name, room_number)
+Ref: Issue.raised_by_student > Student.student_id
+Ref: Issue.assigned_staff > Staff.staff_id
