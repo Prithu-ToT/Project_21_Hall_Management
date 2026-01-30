@@ -126,6 +126,31 @@ CREATE TABLE resident_service_payment (
 -- ----------------------------------------------------
 -- ----------------- Prithu ---------------------------
 -- ----------------------------------------------------
+CREATE TYPE booking_status AS ENUM (
+    'PENDING',
+    'CONFIRMED',
+    'DENIED'
+);
+
+CREATE TABLE room_booking (
+    booking_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    student_id BIGINT NOT NULL,
+    room_id INT NOT NULL,
+    status booking_status NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_room_booking PRIMARY KEY (booking_id),
+
+    CONSTRAINT fk_booking_student
+        FOREIGN KEY (student_id)
+        REFERENCES student(student_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_booking_room
+        FOREIGN KEY (room_id)
+        REFERENCES room(room_id)
+        ON DELETE RESTRICT
+);
 
 
 -- my commit for pull-req
