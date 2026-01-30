@@ -76,3 +76,7 @@ CREATE TABLE hall_allocation (
         REFERENCES seat_fee_payment(payment_id)
         ON DELETE SET NULL
 );
+
+-- ----------------------------------------------------
+-- ----------------- Prithu ---------------------------
+-- ----------------------------------------------------
