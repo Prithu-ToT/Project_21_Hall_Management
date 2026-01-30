@@ -126,7 +126,7 @@ CREATE TABLE resident_service_payment (
 -- ----------------------------------------------------
 -- ----------------- Prithu ---------------------------
 -- ----------------------------------------------------
-REATE TYPE booking_status AS ENUM (
+CREATE TYPE booking_status AS ENUM (
     'PENDING',
     'CONFIRMED',
     'DENIED'
@@ -151,3 +151,6 @@ CREATE TABLE room_booking (
         REFERENCES room(room_id)
         ON DELETE RESTRICT
 );
+
+
+-- my commit for pull-req
