@@ -77,6 +77,52 @@ CREATE TABLE hall_allocation (
         ON DELETE SET NULL
 );
 
+CREATE TABLE resident_service (
+    service_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    allocation_id BIGINT NOT NULL,
+    service_name TEXT NOT NULL,
+    service_period_start DATE NOT NULL,
+    service_period_end DATE NOT NULL,
+
+    CONSTRAINT pk_resident_service PRIMARY KEY (service_id),
+    CONSTRAINT fk_service_allocation
+        FOREIGN KEY (allocation_id)
+        REFERENCES hall_allocation(allocation_id)
+        ON DELETE RESTRICT,
+    CONSTRAINT chk_service_period
+        CHECK (service_period_end >= service_period_start)
+);
+
+CREATE TABLE resident_service (
+    service_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    allocation_id BIGINT NOT NULL,
+    service_name TEXT NOT NULL,
+    service_period_start DATE NOT NULL,
+    service_period_end DATE NOT NULL,
+    service_fee_amount NUMERIC(10,2) NOT NULL,
+
+    CONSTRAINT pk_resident_service PRIMARY KEY (service_id),
+    CONSTRAINT fk_service_allocation
+        FOREIGN KEY (allocation_id)
+        REFERENCES hall_allocation(allocation_id)
+        ON DELETE RESTRICT,
+    CONSTRAINT chk_service_period
+        CHECK (service_period_end >= service_period_start)
+);
+CREATE TABLE resident_service_payment (
+    payment_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    service_id BIGINT NOT NULL UNIQUE,
+    amount_paid NUMERIC(10,2) NOT NULL,
+    bank_transaction_id VARCHAR(32) UNIQUE,
+
+    CONSTRAINT pk_resident_service_payment PRIMARY KEY (payment_id),
+    CONSTRAINT fk_payment_service
+        FOREIGN KEY (service_id)
+        REFERENCES resident_service(service_id)
+        ON DELETE CASCADE
+);
+
+
 -- ----------------------------------------------------
 -- ----------------- Prithu ---------------------------
 -- ----------------------------------------------------
