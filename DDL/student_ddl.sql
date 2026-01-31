@@ -1,5 +1,13 @@
 CREATE TYPE alloc_status AS ENUM ('ACTIVE', 'PENDING', 'EXPIRED');
 
+CREATE TYPE booking_status AS ENUM (
+    'PENDING',
+    'CONFIRMED',
+    'DENIED'
+);
+
+-- halls
+
 CREATE TABLE hall (
     hall_id INT GENERATED ALWAYS AS IDENTITY,
     hall_name TEXT NOT NULL,
@@ -8,7 +16,6 @@ CREATE TABLE hall (
     CONSTRAINT pk_hall PRIMARY KEY (hall_id),
     CONSTRAINT uq_hall_name UNIQUE (hall_name)
 );
-
 
 CREATE TABLE room (
     room_id INT GENERATED ALWAYS AS IDENTITY,
@@ -26,6 +33,8 @@ CREATE TABLE room (
 );
 
 
+-- students
+
 CREATE TABLE person (
     person_id BIGINT GENERATED ALWAYS AS IDENTITY,
     nid VARCHAR(16) UNIQUE,
@@ -35,10 +44,9 @@ CREATE TABLE person (
     CONSTRAINT pk_person PRIMARY KEY (person_id)
 );
 
-
 CREATE TABLE student (
     student_id BIGINT GENERATED ALWAYS AS IDENTITY,
-    semister INT NOT NULL,
+    semester INT NOT NULL,
     department VARCHAR(8),
     person_id BIGINT NOT NULL UNIQUE,
 
@@ -49,50 +57,46 @@ CREATE TABLE student (
         ON DELETE CASCADE
 );
 
-
-CREATE TABLE seat_fee_payment (
-    payment_id BIGINT GENERATED ALWAYS AS IDENTITY,
-    allocation_id BIGINT UNIQUE,           -- one-to-one with hall_allocation
-    amount NUMERIC(10,2) NOT NULL,
-    bank_transaction_id VARCHAR(32) UNIQUE,
-
-    CONSTRAINT pk_seat_fee_payment PRIMARY KEY (payment_id)
-);
-
+-- HALL ALLOCATION
 
 CREATE TABLE hall_allocation (
     allocation_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    student_id BIGINT NOT NULL UNIQUE,
     room_id INT NOT NULL,
-    seat_fee_payment_id BIGINT UNIQUE,
-    status alloc_status NOT NULL,
+    status alloc_status NOT NULL DEFAULT 'PENDING',  -- paying for this id allocation id changes status
 
-    CONSTRAINT pk_alloc PRIMARY KEY (allocation_id),
+    CONSTRAINT pk_hall_allocation PRIMARY KEY (allocation_id),
+
+    CONSTRAINT fk_alloc_student
+        FOREIGN KEY (student_id)
+        REFERENCES student(student_id)
+        ON DELETE RESTRICT,
+
     CONSTRAINT fk_alloc_room
         FOREIGN KEY (room_id)
         REFERENCES room(room_id)
-        ON DELETE RESTRICT,
-    CONSTRAINT fk_alloc_payment
-        FOREIGN KEY (seat_fee_payment_id)
-        REFERENCES seat_fee_payment(payment_id)
-        ON DELETE SET NULL
+        ON DELETE RESTRICT
 );
 
-CREATE TABLE resident_service (
-    service_id BIGINT GENERATED ALWAYS AS IDENTITY,
-    allocation_id BIGINT NOT NULL,
-    service_name TEXT NOT NULL,
-    service_period_start DATE NOT NULL,
-    service_period_end DATE NOT NULL,
 
-    CONSTRAINT pk_resident_service PRIMARY KEY (service_id),
-    CONSTRAINT fk_service_allocation
+
+CREATE TABLE seat_fee_payment (
+
+    payment_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    allocation_id BIGINT NOT NULL UNIQUE,
+    amount NUMERIC(10,2) NOT NULL,
+    bank_transaction_id VARCHAR(32) UNIQUE,
+
+    CONSTRAINT pk_seat_fee_payment PRIMARY KEY (payment_id),
+
+    CONSTRAINT fk_payment_allocation
         FOREIGN KEY (allocation_id)
         REFERENCES hall_allocation(allocation_id)
-        ON DELETE RESTRICT,
-    CONSTRAINT chk_service_period
-        CHECK (service_period_end >= service_period_start)
+        ON DELETE CASCADE
 );
 
+
+-- servise
 CREATE TABLE resident_service (
     service_id BIGINT GENERATED ALWAYS AS IDENTITY,
     allocation_id BIGINT NOT NULL,
@@ -102,13 +106,16 @@ CREATE TABLE resident_service (
     service_fee_amount NUMERIC(10,2) NOT NULL,
 
     CONSTRAINT pk_resident_service PRIMARY KEY (service_id),
+
     CONSTRAINT fk_service_allocation
         FOREIGN KEY (allocation_id)
         REFERENCES hall_allocation(allocation_id)
         ON DELETE RESTRICT,
+
     CONSTRAINT chk_service_period
         CHECK (service_period_end >= service_period_start)
 );
+
 CREATE TABLE resident_service_payment (
     payment_id BIGINT GENERATED ALWAYS AS IDENTITY,
     service_id BIGINT NOT NULL UNIQUE,
@@ -116,27 +123,19 @@ CREATE TABLE resident_service_payment (
     bank_transaction_id VARCHAR(32) UNIQUE,
 
     CONSTRAINT pk_resident_service_payment PRIMARY KEY (payment_id),
+
     CONSTRAINT fk_payment_service
         FOREIGN KEY (service_id)
         REFERENCES resident_service(service_id)
         ON DELETE CASCADE
 );
 
-
--- ----------------------------------------------------
--- ----------------- Prithu ---------------------------
--- ----------------------------------------------------
-CREATE TYPE booking_status AS ENUM (
-    'PENDING',
-    'CONFIRMED',
-    'DENIED'
-);
-
+-- ROOM BOOKING
 CREATE TABLE room_booking (
     booking_id BIGINT GENERATED ALWAYS AS IDENTITY,
     student_id BIGINT NOT NULL,
     room_id INT NOT NULL,
-    status booking_status NOT NULL DEFAULT 'PENDING',
+    status booking_status NOT NULL DEFAULT 'PENDING',       -- before confirming, ensure room has <6 allocation
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_room_booking PRIMARY KEY (booking_id),
@@ -151,6 +150,3 @@ CREATE TABLE room_booking (
         REFERENCES room(room_id)
         ON DELETE RESTRICT
 );
-
-
--- my commit for pull-req
