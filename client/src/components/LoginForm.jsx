@@ -2,14 +2,36 @@ import { useState } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
 
-export default function LoginForm() {
+export default function LoginForm({onLogin}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault();                             // refreshing is done in React way, not old html way
-    console.log({ username, password, role });
+    e.preventDefault();
+
+    if (!username || !password) {
+      alert("Please fill username and password");
+      return;
+    }
+
+    if (!role) {
+      alert("Please select a role");
+      return;
+    }
+
+    // Create data
+    const data = {
+      username,
+      password,
+      role,
+      success: true,
+    };
+
+    // callback to assign
+    onLogin(data)
+
+    // console.log({ username, password, role });
   };
 
   return (

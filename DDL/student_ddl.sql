@@ -150,3 +150,24 @@ CREATE TABLE room_booking (
         REFERENCES room(room_id)
         ON DELETE RESTRICT
 );
+
+-- Auth Tables
+CREATE TABLE student_auth (
+    sid BIGINT PRIMARY KEY,
+    password TEXT NOT NULL,
+
+    CONSTRAINT fk_student_auth_student
+        FOREIGN KEY (sid)
+        REFERENCES student(sid)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE hall_auth (
+    hall_id BIGINT PRIMARY KEY,
+    password TEXT NOT NULL,
+
+    CONSTRAINT fk_hall_auth_hall
+        FOREIGN KEY (hall_id)
+        REFERENCES hall(hall_id)
+        ON DELETE CASCADE
+);
