@@ -151,6 +151,7 @@ CREATE TABLE room_booking (
         ON DELETE RESTRICT
 );
 
+
 -- Auth Tables
 CREATE TABLE student_auth (
     sid BIGINT PRIMARY KEY,

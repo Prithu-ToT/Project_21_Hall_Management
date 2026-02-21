@@ -47,11 +47,6 @@ export default function App() {
     <div className="container mt-5">
       <Header title="Hall Management System" />
       <LoginForm onLogin={handleLogin}/>
-
-      {userData && (
-        <pre className="mt-3">{JSON.stringify(userData, null, 2)}</pre>
-      )}
-
     </div>
   );
 }
