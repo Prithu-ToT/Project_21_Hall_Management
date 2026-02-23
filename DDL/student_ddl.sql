@@ -1,4 +1,4 @@
-CREATE TYPE alloc_status AS ENUM ('ACTIVE', 'PENDING', 'EXPIRED');
+--CREATE TYPE alloc_status AS ENUM ('ACTIVE', 'PENDING', 'EXPIRED');
 
 CREATE TYPE booking_status AS ENUM (
     'PENDING',
@@ -151,15 +151,26 @@ CREATE TABLE room_booking (
         ON DELETE RESTRICT
 );
 
+-- will remove this constraint, trigger will handle
 
--- Auth Tables
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE resident_service
+ADD CONSTRAINT uq_no_overlapping_same_service
+EXCLUDE USING gist (
+    allocation_id WITH =,
+    service_name WITH =,
+    daterange(service_period_start, service_period_end, '[]') WITH &&
+);
+
+-- run complete
+
 CREATE TABLE student_auth (
-    sid BIGINT PRIMARY KEY,
+    student_id BIGINT PRIMARY KEY,
     password TEXT NOT NULL,
 
     CONSTRAINT fk_student_auth_student
-        FOREIGN KEY (sid)
-        REFERENCES student(sid)
+        FOREIGN KEY (student_id)
+        REFERENCES student(student_id)
         ON DELETE CASCADE
 );
 

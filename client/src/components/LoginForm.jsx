@@ -2,14 +2,22 @@ import { useState } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
 
+const BackendServer = "http://localhost:5000/"
+
 export default function LoginForm({onLogin}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  function resetForm (){
+    setUsername("");
+    setPassword("");
+    setRole("");
+};
 
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+    
     if (!username || !password) {
       alert("Please fill username and password");
       return;
@@ -19,19 +27,32 @@ export default function LoginForm({onLogin}) {
       alert("Please select a role");
       return;
     }
+    
+    const userInput = { username, password, role };
 
-    // Create data
-    const data = {
-      username,
-      password,
-      role,
-      success: true,
-    };
+    try {
+      const response = await fetch(BackendServer + "login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userInput)
+      });
 
-    // callback to assign
-    onLogin(data)
+      const data = await response.json();
 
-    // console.log({ username, password, role });
+      if (!response.ok) {
+        alert(data.message || "Login failed");
+        resetForm();
+      return;
+      }
+
+      // callback to assign
+      onLogin(data);
+
+    } catch (error) {
+      alert("An error occurred. Please try again.");
+      resetForm();
+      console.error("Login error:", error);
+    }
   };
 
   return (
