@@ -4,20 +4,20 @@ import Button from "./Button";
 
 const BackendServer = "http://localhost:5000/"
 
-export default function LoginForm({onLogin}) {
+export default function LoginForm({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
-  function resetForm (){
+  function resetForm() {
     setUsername("");
     setPassword("");
     setRole("");
-};
+  }
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       alert("Please fill username and password");
       return;
@@ -27,7 +27,7 @@ export default function LoginForm({onLogin}) {
       alert("Please select a role");
       return;
     }
-    
+
     const userInput = { username, password, role };
 
     try {
@@ -42,11 +42,11 @@ export default function LoginForm({onLogin}) {
       if (!response.ok) {
         alert(data.message || "Login failed");
         resetForm();
-      return;
+        return;
       }
 
-      // callback to assign
-      onLogin(data);
+      // Pass data, username, and role up to parent
+      onLogin(data, username, role);
 
     } catch (error) {
       alert("An error occurred. Please try again.");
@@ -57,7 +57,6 @@ export default function LoginForm({onLogin}) {
 
   return (
     <div className="container mt-5">
-
       <form onSubmit={handleSubmit} className="card p-4 shadow">
         <TextInput
           label="Username"
