@@ -2,7 +2,7 @@ import { useState } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
 
-const BackendServer = "http://localhost:5000/"
+import { BackendServer } from "../App";
 
 export default function LoginForm({onLogin}) {
   const [username, setUsername] = useState("");
@@ -37,16 +37,21 @@ export default function LoginForm({onLogin}) {
         body: JSON.stringify(userInput)
       });
 
-      const data = await response.json();
+      const confirmation = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Login failed");
+        alert(confirmation.message || "Login failed");
         resetForm();
       return;
       }
 
-      // callback to assign
-      onLogin(data);
+      // callback with data
+      const userDetails = {
+        username: userInput.username,
+        role: userInput.role,
+      };
+
+      onLogin(userDetails);
 
     } catch (error) {
       alert("An error occurred. Please try again.");

@@ -53,6 +53,31 @@ app.post("/login", async (req, res) => {
     }
 });
 
+app.get("/student/basic/:id", async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        
+        const query = 
+                    `SELECT name, department, semester
+                    FROM student sd
+                    JOIN person ps ON sd.person_id = ps.person_id
+                    WHERE sd.student_id = ($1);`
+        const result = await pool.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
+
 app.get("/", (req, res) => {
   res.send("Heartbeat");
 });
