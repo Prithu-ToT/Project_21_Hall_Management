@@ -20,7 +20,7 @@ CREATE TABLE hall (
 CREATE TABLE room (
     room_id INT GENERATED ALWAYS AS IDENTITY,
     hall_id INT NOT NULL,
-    room_number TEXT NOT NULL,
+    room_number INT NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
 
     CONSTRAINT pk_room PRIMARY KEY (room_id),
@@ -182,4 +182,52 @@ CREATE TABLE hall_auth (
         FOREIGN KEY (hall_id)
         REFERENCES hall(hall_id)
         ON DELETE CASCADE
+);
+
+-- ============================
+-- ekhno schema thik kora lagtese
+-- ==============================
+
+-- remove expired from allocation_satus
+ALTER TYPE alloc_status RENAME TO alloc_status_old;
+CREATE TYPE alloc_status AS ENUM ('ACTIVE', 'PENDING');
+
+ALTER TABLE hall_allocation
+ALTER COLUMN status DROP DEFAULT;
+
+ALTER TABLE hall_allocation
+ALTER COLUMN status TYPE alloc_status
+USING status::text::alloc_status;
+
+ALTER TABLE hall_allocation
+ALTER COLUMN status SET DEFAULT 'PENDING';
+
+DROP TYPE alloc_status_old;
+
+-- Add time of allocation
+ALTER TABLE hall_allocation
+ADD COLUMN start_date DATE NOT NULL DEFAULT CURRENT_DATE;
+
+--Add historical allocations
+CREATE TABLE allocation_history (
+    history_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    student_id BIGINT NOT NULL,
+    room_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL DEFAULT CURRENT_DATE,
+
+    CONSTRAINT pk_allocation_history PRIMARY KEY (history_id),
+
+    CONSTRAINT fk_history_student
+        FOREIGN KEY (student_id)
+        REFERENCES student(student_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_history_room
+        FOREIGN KEY (room_id)
+        REFERENCES room(room_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_history_dates
+        CHECK (end_date >= start_date)
 );
