@@ -24,18 +24,20 @@ export default function App() {
   }
 
   if(session?.role === "student"){
-    return < StudentDashboard username={session.username} />
+    return <StudentDashboard username={session.username} />
   }
   
   return (
-    <div className="container mt-5">
-      <Header title="Hall Management System" />
-      <LoginForm onLogin={handleLogin}/>
-      {session && (
-        <pre className="mt-3 bg-light p-3 rounded">
-          {JSON.stringify(session, null, 2)}
-        </pre>
-      )}
+    <div className="page-shell">
+      <div className="card-shell fade-up">
+        <Header title="Hall Management System" />
+        <LoginForm onLogin={handleLogin}/>
+        {session && (
+          <pre className="mt-3 bg-light p-3 rounded" style={{ fontSize: "0.8rem" }}>
+            {JSON.stringify(session, null, 2)}
+          </pre>
+        )}
+      </div>
     </div>
   );
 }

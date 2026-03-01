@@ -31,7 +31,7 @@ const VIEWS = {
 
 const InfoRow = ({ label, value = "—" }) => (
     <div style={styles.infoRow}>
-        <span style={styles.label}>{label}:</span>
+        <span style={styles.label}>{label}</span>
         <span style={styles.value}>{value}</span>
     </div>
 );
@@ -79,100 +79,132 @@ const StudentDashboard = ({ username }) => {
     };
 
     return (
-        
-        <div style={styles.container}>
-            <Header title="Student Dashboard" />
+        <div className="page-shell-top">
+            <div style={styles.container} className="fade-up">
+                <Header title="Student Dashboard" />
 
-            {/* Student Information Card */}
-            <div style={styles.infoCard}>
-                <h2 style={styles.cardTitle}>Student Information</h2>
-                <InfoRow label="Student ID" value={username} />
-                <InfoRow label="Name" value={studentInfo?.name}/>
-                <InfoRow label="Department" value={studentInfo?.department} />
-                <InfoRow label="Semester" value={studentInfo?.semester}/>
-            
+                {/* Student Information Card */}
+                <div style={styles.infoCard} className="fade-up fade-up-1">
+                    <div style={styles.cardHeader}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <h2 style={styles.cardTitle}>Student Information</h2>
+                    </div>
+
+                    {loading && (
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading…</p>
+                    )}
+                    {error && (
+                        <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{error}</p>
+                    )}
+
+                    <div style={styles.infoGrid}>
+                        <InfoRow label="Student ID" value={username} />
+                        <InfoRow label="Name" value={studentInfo?.name} />
+                        <InfoRow label="Department" value={studentInfo?.department} />
+                        <InfoRow label="Semester" value={studentInfo?.semester} />
+                    </div>
+                </div>
+
+                {/* Navigation Buttons */}
+                <div style={styles.buttonRow} className="fade-up fade-up-2">
+                    {[
+                        { view: VIEWS.ALLOCATION, label: "Allocation Info" },
+                        { view: VIEWS.SERVICE,    label: "Service Info"    },
+                        { view: VIEWS.BOOKING,    label: "Booking Info"    },
+                    ].map(({ view, label }) => (
+                        <Button
+                            key={view}
+                            variant={activeView === view ? "primary" : "outline-primary"}
+                            onClick={() => handleViewToggle(view)}
+                            className="flex-fill"
+                        >
+                            {label}
+                        </Button>
+                    ))}
+                </div>
+
+                {/* Dynamic Card Area */}
+                {/* <div style={styles.dynamicArea}>{renderActiveCard()}</div> */}
             </div>
-
-            {/* Navigation Buttons */}
-            <div style={styles.buttonRow}>
-                <Button
-                    variant={activeView === VIEWS.ALLOCATION ? "primary" : "outline-primary"}
-                    onClick={() => handleViewToggle(VIEWS.ALLOCATION)}
-                >
-                    Allocation Info
-                </Button>
-                <Button
-                    variant={activeView === VIEWS.SERVICE ? "primary" : "outline-primary"}
-                    onClick={() => handleViewToggle(VIEWS.SERVICE)}
-                >
-                    Service Info
-                </Button>
-                <Button
-                    variant={activeView === VIEWS.BOOKING ? "primary" : "outline-primary"}
-                    onClick={() => handleViewToggle(VIEWS.BOOKING)}
-                >
-                    Booking Info
-                </Button>
-            </div>
-
-            {/* Dynamic Card Area */}
-            {/* <div style={styles.dynamicArea}>{renderActiveCard()}</div> */}
         </div>
     );
 };
 
 const styles = {
     container: {
-        maxWidth: "800px",
-        margin: "40px auto",
-        padding: "24px",
-        fontFamily: "sans-serif",
+        width: "100%",
+        maxWidth: "680px",
     },
     infoCard: {
-        backgroundColor: "#ffffff",
-        border: "1px solid #e2e8f0",
-        borderRadius: "8px",
-        padding: "24px",
-        marginBottom: "24px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+        backgroundColor: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius)",
+        padding: "1.75rem",
+        marginBottom: "1.25rem",
+        boxShadow: "var(--shadow-md)",
+    },
+    cardHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        color: "var(--navy)",
+        marginBottom: "1.25rem",
+        paddingBottom: "1rem",
+        borderBottom: "1px solid var(--border)",
     },
     cardTitle: {
-        fontSize: "18px",
-        marginBottom: "16px",
-        color: "#2d3748",
-        borderBottom: "1px solid #e2e8f0",
-        paddingBottom: "8px",
+        fontSize: "1rem",
+        fontWeight: 600,
+        color: "var(--navy)",
+        margin: 0,
+        fontFamily: "'Sora', sans-serif",
+        letterSpacing: "-0.01em",
+    },
+    infoGrid: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "0.5rem 1rem",
     },
     infoRow: {
         display: "flex",
-        marginBottom: "10px",
-        gap: "12px",
+        flexDirection: "column",
+        gap: "2px",
+        padding: "0.6rem 0.75rem",
+        background: "var(--surface-2)",
+        borderRadius: "var(--radius-sm)",
     },
     label: {
-        fontWeight: "600",
-        color: "#4a5568",
-        width: "120px",
+        fontSize: "0.72rem",
+        fontWeight: 600,
+        color: "var(--text-muted)",
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
     },
     value: {
-        color: "#2d3748",
+        fontSize: "0.95rem",
+        fontWeight: 500,
+        color: "var(--text-primary)",
     },
     buttonRow: {
         display: "flex",
-        gap: "12px",
-        marginBottom: "24px",
+        gap: "10px",
+        marginBottom: "1.5rem",
         flexWrap: "wrap",
     },
     dynamicArea: {
         minHeight: "80px",
     },
     placeholderCard: {
-        backgroundColor: "#ebf8ff",
-        border: "1px dashed #90cdf4",
-        borderRadius: "8px",
-        padding: "24px",
+        backgroundColor: "#eff6ff",
+        border: "1px dashed #93c5fd",
+        borderRadius: "var(--radius)",
+        padding: "2rem",
         textAlign: "center",
-        color: "#2b6cb0",
-        fontSize: "15px",
+        color: "#2563eb",
+        fontSize: "0.9rem",
     },
 };
 
