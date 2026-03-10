@@ -22,20 +22,29 @@ router.get("/basic/:id", asyncWrapper(async (req, res) => {
     res.json(result.rows[0]);
 }));
 
-// // GET /student/allocation/:id
-// router.get("/allocation/:id", asyncWrapper(async (req, res) => {
-//     const id = req.params.id;
+// GET /student/allocation/:id
+router.get("/allocation/:id", asyncWrapper(async (req, res) => {
+    const id = req.params.id;
 
-//     const result = await pool.query(
-//         `SELECT * FROM allocation WHERE student_id = $1`,
-//         [id]
-//     );
+    const allocationResult = await pool.query(
+        `SELECT * FROM hall_allocation WHERE student_id = $1`,
+        [id]
+    );
 
-//     if (result.rows.length === 0) {
-//         return res.status(404).json({ message: "Allocation not found" });
-//     }
+    if (allocationResult.rows.length === 0) {
+        return res.status(404).json({ message: "Allocation not found" });
+    }
+    const { room_id, ...restOfAlloc } = allocationResult.rows[0];
 
-//     res.json(result.rows[0]);
-// }));
+    const roomResult = await pool.query(
+        `SELECT * FROM get_room_info($1)`,
+        [room_id]
+    );
+
+    const room_info = roomResult.rows[0];
+
+    res.json({ ...restOfAlloc, ...room_info });
+    
+}));
 
 module.exports = router;

@@ -1,5 +1,4 @@
-SELECT get_hall_id('TH');
-
+-- database logic to real world logic
 CREATE OR REPLACE FUNCTION hall_of_room (p_room_id INT)
 RETURNS INT
 LANGUAGE SQL
@@ -9,6 +8,21 @@ AS $$
   JOIN room rm ON hl.hall_id = rm.hall_id
   WHERE rm.room_id = $1;
 $$;
+
+CREATE OR REPLACE FUNCTION get_room_info (p_room_id INT)
+RETURNS TABLE(
+    hall_name TEXT,
+    room_number INT
+)
+LANGUAGE SQL
+AS $$
+  SELECT hl.hall_name, rm.room_number 
+  FROM room rm
+  JOIN hall hl ON hl.hall_id = rm.hall_id
+  WHERE rm.room_id = $1;
+$$;
+
+--SELECT get_room_info(2);  -- returns {hall_name : "TH", room_number : 102}
 
 -- real world logic to DB logic for hall and room
 CREATE OR REPLACE FUNCTION get_hall_id(p_hall_name TEXT)
@@ -26,22 +40,6 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION get_hall_id(p_hall_name TEXT)
-RETURNS INT
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_hall_id INT;
-BEGIN
-    SELECT hall_id INTO v_hall_id
-    FROM hall
-    WHERE hall_name = p_hall_name;
-    
-    RETURN v_hall_id;
-END;
-$$;
-
--- room id -> real world  identifiers
 CREATE OR REPLACE FUNCTION get_room_id(p_hall_name TEXT, p_room_no INT)
 RETURNS INT
 LANGUAGE plpgsql
@@ -62,4 +60,4 @@ BEGIN
 END;
 $$;
 
---SELECT get_room_id('SWH', 301);
+SELECT get_room_id('SWH', 301);
