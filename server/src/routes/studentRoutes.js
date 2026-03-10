@@ -47,4 +47,18 @@ router.get("/allocation/:id", asyncWrapper(async (req, res) => {
     
 }));
 
+// POST /student/pay-seat-fee
+router.post("/pay-seat-fee", asyncWrapper(async (req, res) => {
+    const { allocation_id, bank_transaction_id, amount } = req.body;
+
+    await pool.query(
+        `INSERT INTO seat_fee_payment
+        (allocation_id, amount, bank_transaction_id)
+        VALUES ($1, $2, $3)`,
+        [allocation_id, amount, bank_transaction_id]
+    );
+
+    res.status(200).json({ message: "Payment recorded" });
+}));
+
 module.exports = router;

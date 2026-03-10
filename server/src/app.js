@@ -19,8 +19,18 @@ app.use("/student", studentRoutes);
 
 // Error handling middleware — must be at the bottom
 app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(err.status || 500).json({ message: err.message || "Internal server error" });
+    const status = err.status || 500;
+    let message = err.message || "Internal server error";
+
+    switch (err.code) {
+        case "23505":
+            return res.status(400).json({ message: "Inserted value has to be unique" });
+        case "23503":
+            return res.status(400).json({ message: "Inserted value violates dependencies" });
+        default:
+            console.error(err);
+            return res.status(status).json({ message });
+    }
 });
 
 module.exports = app;

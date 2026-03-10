@@ -10,7 +10,7 @@ $$;
 
 -- Trigger for semister room capasity
 CREATE OR REPLACE FUNCTION enforce_room_capasity()
-  RETURNS TRIGGER
+RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
@@ -18,7 +18,7 @@ BEGIN
     IF (count_allocation (NEW.room_id) >= 6) THEN
       RAISE EXCEPTION 
         'Room %s is full', NEW.room_id
-        USING ERRCODE = 'P1001';
+         USING ERRCODE = 'P1001';
     END IF;
   
   RETURN NEW;

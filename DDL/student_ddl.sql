@@ -231,3 +231,8 @@ CREATE TABLE allocation_history (
     CONSTRAINT chk_history_dates
         CHECK (end_date >= start_date)
 );
+
+
+ALTER TABLE seat_fee_payment
+ADD CONSTRAINT non_negative_fee
+CHECK (amount > 0)

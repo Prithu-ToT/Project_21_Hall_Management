@@ -35,6 +35,7 @@ export default function AllocationInformationCard({ username }) {
 
     const [showPayForm, setShowPayForm] = useState(false);
     const [txnId, setTxnId] = useState("");
+    const [amount, setAmount] = useState("");
     const [paying, setPaying] = useState(false);
     const [payError, setPayError] = useState(null);
 
@@ -58,8 +59,8 @@ export default function AllocationInformationCard({ username }) {
     }, [username]);
 
     const handlePaySubmit = async () => {
-        if (!txnId.trim()) {
-            setPayError("Please enter a transaction ID");
+        if (!txnId.trim() || !amount) {
+            setPayError("Please fill in all fields");
             return;
         }
         setPaying(true);
@@ -71,6 +72,7 @@ export default function AllocationInformationCard({ username }) {
                 body: JSON.stringify({
                     allocation_id: allocation.allocation_id,
                     bank_transaction_id: txnId.trim(),
+                    amount: parseFloat(amount),
                 }),
             });
             const data = await res.json();
@@ -91,6 +93,7 @@ export default function AllocationInformationCard({ username }) {
 
     const handleBackFromPay = () => {
         setShowPayForm(false);
+        setAmount("");
         setTxnId("");
         setPayError(null);
     };
@@ -113,6 +116,17 @@ export default function AllocationInformationCard({ username }) {
                 <p style={styles.payHint}>
                     Provide the unique transaction ID from your bank payment receipt.
                 </p>
+
+                <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Amount (e.g. 5000)"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    style={{ marginBottom: "0.75rem" }}
+                />
+
+
                 <input
                     type="text"
                     className="form-control"
