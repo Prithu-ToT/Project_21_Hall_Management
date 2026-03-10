@@ -1,32 +1,28 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "./Button";
 import Header from "./Header";
-import { useEffect } from "react";
 import { BackendServer } from "../App";
-
-const AllocationInformationCard = () => (
-    <div style={styles.placeholderCard}>
-        <p>AllocationInformationCard — Coming Soon</p>
-    </div>
-);
-
-const ServiceInformationCard = () => (
-    <div style={styles.placeholderCard}>
-        <p>ServiceInformationCard — Coming Soon</p>
-    </div>
-);
-
-const BookingInformationCard = () => (
-    <div style={styles.placeholderCard}>
-        <p>BookingInformationCard — Coming Soon</p>
-    </div>
-);
+import AllocationInformationCard from "./AllocationInformationCard";
+import ServiceInformationCard from "./ServiceInformationCard";
+import BookingInformationCard from "./BookingInformationCard";
 
 const VIEWS = {
-    NONE: "NONE",
+    NONE:       "NONE",
     ALLOCATION: "ALLOCATION",
-    SERVICE: "SERVICE",
-    BOOKING: "BOOKING",
+    SERVICE:    "SERVICE",
+    BOOKING:    "BOOKING",
+};
+
+const INFO_CARDS = [
+    { view: VIEWS.ALLOCATION, label: "Allocation Info" },
+    { view: VIEWS.SERVICE,    label: "Service Info"    },
+    { view: VIEWS.BOOKING,    label: "Booking Info"    },
+];
+
+const CARD_TITLES = {
+    [VIEWS.ALLOCATION]: "Hall Allocation",
+    [VIEWS.SERVICE]:    "Resident Services",
+    [VIEWS.BOOKING]:    "Room Bookings",
 };
 
 const InfoRow = ({ label, value = "—" }) => (
@@ -57,24 +53,20 @@ const StudentDashboard = ({ username }) => {
                 setLoading(false);
             }
         };
-
         if (username) fetchStudentInfo();
     }, [username]);
 
     const handleViewToggle = (view) => {
+        // clicking the active tab again closes it
         setActiveView((prev) => (prev === view ? VIEWS.NONE : view));
     };
 
     const renderActiveCard = () => {
         switch (activeView) {
-            case VIEWS.ALLOCATION:
-                return <AllocationInformationCard username={username} />;
-            case VIEWS.SERVICE:
-                return <ServiceInformationCard username={username} />;
-            case VIEWS.BOOKING:
-                return <BookingInformationCard username={username} />;
-            default:
-                return null;
+            case VIEWS.ALLOCATION: return <AllocationInformationCard username={username} />;
+            case VIEWS.SERVICE:    return <ServiceInformationCard    username={username} />;
+            case VIEWS.BOOKING:    return <BookingInformationCard    username={username} />;
+            default:               return null;
         }
     };
 
@@ -84,7 +76,7 @@ const StudentDashboard = ({ username }) => {
                 <Header title="Student Dashboard" />
 
                 {/* Student Information Card */}
-                <div style={styles.infoCard} className="fade-up fade-up-1">
+                <div style={styles.card} className="fade-up fade-up-1">
                     <div style={styles.cardHeader}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -93,28 +85,20 @@ const StudentDashboard = ({ username }) => {
                         <h2 style={styles.cardTitle}>Student Information</h2>
                     </div>
 
-                    {loading && (
-                        <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading…</p>
-                    )}
-                    {error && (
-                        <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{error}</p>
-                    )}
+                    {loading && <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading…</p>}
+                    {error   && <p style={{ color: "var(--danger)",    fontSize: "0.88rem" }}>{error}</p>}
 
                     <div style={styles.infoGrid}>
-                        <InfoRow label="Student ID" value={username} />
-                        <InfoRow label="Name" value={studentInfo?.name} />
-                        <InfoRow label="Department" value={studentInfo?.department} />
-                        <InfoRow label="Semester" value={studentInfo?.semester} />
+                        <InfoRow label="Student ID"  value={username}                />
+                        <InfoRow label="Name"        value={studentInfo?.name}       />
+                        <InfoRow label="Department"  value={studentInfo?.department} />
+                        <InfoRow label="Semester"    value={studentInfo?.semester}   />
                     </div>
                 </div>
 
                 {/* Navigation Buttons */}
                 <div style={styles.buttonRow} className="fade-up fade-up-2">
-                    {[
-                        { view: VIEWS.ALLOCATION, label: "Allocation Info" },
-                        { view: VIEWS.SERVICE,    label: "Service Info"    },
-                        { view: VIEWS.BOOKING,    label: "Booking Info"    },
-                    ].map(({ view, label }) => (
+                    {INFO_CARDS.map(({ view, label }) => (
                         <Button
                             key={view}
                             variant={activeView === view ? "primary" : "outline-primary"}
@@ -126,8 +110,15 @@ const StudentDashboard = ({ username }) => {
                     ))}
                 </div>
 
-                {/* Dynamic Card Area */}
-                {/* <div style={styles.dynamicArea}>{renderActiveCard()}</div> */}
+                {/* Dynamic Card — only rendered when a tab is active */}
+                {activeView !== VIEWS.NONE && (
+                    <div style={styles.card} className="fade-up">
+                        <div style={styles.cardHeader}>
+                            <h2 style={styles.cardTitle}>{CARD_TITLES[activeView]}</h2>
+                        </div>
+                        {renderActiveCard()}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -138,7 +129,7 @@ const styles = {
         width: "100%",
         maxWidth: "680px",
     },
-    infoCard: {
+    card: {
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
         borderRadius: "var(--radius)",
@@ -191,20 +182,8 @@ const styles = {
     buttonRow: {
         display: "flex",
         gap: "10px",
-        marginBottom: "1.5rem",
+        marginBottom: "1.25rem",
         flexWrap: "wrap",
-    },
-    dynamicArea: {
-        minHeight: "80px",
-    },
-    placeholderCard: {
-        backgroundColor: "#eff6ff",
-        border: "1px dashed #93c5fd",
-        borderRadius: "var(--radius)",
-        padding: "2rem",
-        textAlign: "center",
-        color: "#2563eb",
-        fontSize: "0.9rem",
     },
 };
 
