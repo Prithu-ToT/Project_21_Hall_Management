@@ -63,64 +63,14 @@ router.post("/pay-seat-fee", asyncWrapper(async (req, res) => {
 
 module.exports = router;
 
-// GET /student/services/:studentId
-router.get("/services/:studentId", asyncWrapper( async (req, res) =>{
-    
-    const id = req.params.studentId;
-
+// GET /student/halls
+router.get("/halls", asyncWrapper(async (req, res) =>{
     const response = await pool.query(
-        `SELECT rs.service_id, service_name, 
-                TO_CHAR(service_period_start, 'DD-Mon-YYYY') as service_period_start, 
-                TO_CHAR(service_period_end, 'DD-Mon-YYYY') as service_period_end, 
-                rsp.payment_id, service_fee_amount
-        FROM resident_service rs
-        LEFT JOIN resident_service_payment rsp
-        ON rs.service_id = rsp.service_id
-        WHERE allocation_id = $1`,
-        [id]
-    );
+        `
+        SELECT hall_id, hall_name
+        FROM hall
+        `
+    )
 
-    const formattedRows = response.rows.map(row => {
-        const { payment_id, ...restOfRow } = row;
-        return {
-            ...restOfRow,
-            paid: payment_id !== null ? "true" : "false"
-        };
-    });
-
-    res.status(200).json(formattedRows);
-
-}));
-
-// GET /student/bookings/:studentId
-router.get("/bookings/:studentId", asyncWrapper( async(req, res) =>{
-
-const id = req.params.studentId;
-
-const response = await pool.query(
-    `SELECT * 
-    FROM room_booking
-    WHERE student_id = $1;`,
-    [id]
-);
-
-if (response.rows.length === 0) {
-    return res.status(404).json({ message: "No Booking Found" });
-}
-const formattedRows = await Promise.all(response.rows.map(async (row) => {
-    const { room_id, ...restOfRow } = row;
-    
-    const roomResult = await pool.query(
-        `SELECT * FROM get_room_info($1)`,
-        [room_id]
-    );
-    
-    return {
-        ...restOfRow,
-        ...roomResult.rows[0]
-    };
-}));
-
-
-res.json(formattedRows);
-}));
+    res.status(200).json(response.rows);
+}))

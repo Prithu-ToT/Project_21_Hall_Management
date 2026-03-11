@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes");
+const studentBookingRoutes = require("./routes/studentBookingRoutes");
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use((req, res, next) => {
 // Routes
 app.use("/", authRoutes);
 app.use("/student", studentRoutes);
+app.use("/student/bookings", studentBookingRoutes);
+app.use("/student/services", studentBookingRoutes);
 
 // Error handling middleware — must be at the bottom
 app.use((err, req, res, next) => {
