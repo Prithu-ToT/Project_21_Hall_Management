@@ -49,8 +49,28 @@ router.delete("/:bookingId", asyncWrapper(async (req, res) => {
 router.post("/", asyncWrapper(async (req, res) => {
     const { student_id, hall_id, room_number } = req.body;
     
-    // concurrent booking insertion will be placed here
-        
+    const roomRes = await pool.query(
+        `SELECT room_id
+        FROM room
+        WHERE hall_id = $1 AND  room_number = $2`,
+        [hall_id, room_number]
+    )
+
+    if (roomRes.rows.length === 0) {
+        return res.status(400).json({ message: "Room not found" });
+    }
+
+    const room_id = roomRes.rows[0].room_id;
+
+    await pool.query(
+        `INSERT INTO room_booking 
+        (student_id, room_id)
+        VALUES
+        ($1, $2)`,
+        [student_id, room_id]
+    );
+
+    res.status(200).json({message: "Successfully added booking"});
 }));
 
 module.exports = router;

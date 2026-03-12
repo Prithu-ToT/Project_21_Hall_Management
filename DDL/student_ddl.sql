@@ -236,3 +236,6 @@ CREATE TABLE allocation_history (
 ALTER TABLE seat_fee_payment
 ADD CONSTRAINT non_negative_fee
 CHECK (amount > 0)
+
+ALTER TABLE room
+ADD COLUMN capacity INT DEFAULT 6;

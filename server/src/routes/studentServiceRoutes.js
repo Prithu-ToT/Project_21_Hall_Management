@@ -9,6 +9,14 @@ router.get("/:studentId", asyncWrapper( async (req, res) =>{
     
     const id = req.params.studentId;
 
+    const allocResponse = await pool.query(
+        `SELECT allocation_id FROM hall_allocation WHERE student_id = $1`,
+        [id]
+    );
+
+    const aid = allocResponse.rows[0].allocation_id;
+    console.log(aid);
+
     const response = await pool.query(
         `SELECT rs.service_id, service_name, 
                 TO_CHAR(service_period_start, 'DD-Mon-YYYY') as service_period_start, 
@@ -25,10 +33,12 @@ router.get("/:studentId", asyncWrapper( async (req, res) =>{
         const { payment_id, ...restOfRow } = row;
         return {
             ...restOfRow,
-            paid: payment_id !== null ? "true" : "false"
+            paid: payment_id !== null ? true : false
         };
     });
 
-    res.status(200).json(formattedRows);
+    res.status(200).json(response.rows);
 
 }));
+
+module.exports = router;

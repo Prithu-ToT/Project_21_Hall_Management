@@ -25,23 +25,44 @@ EXCEPTION
 END;
 $$;
 
+---------------------------------------
+-- semister rollover : increment semesterm, confirm/deny bookings
+----------------------------------------
 CREATE OR REPLACE PROCEDURE semester_rollover()
 LANGUAGE plpgsql
 AS $$
 DECLARE
     booking RECORD;
 BEGIN
+
     UPDATE student
     SET semester = semester + 1;
+
+    CREATE TEMP TABLE prev_alloc AS
+    SELECT student_id, room_id
+    FROM hall_allocation;
 
     DELETE FROM hall_allocation;
 
     FOR booking IN
-        SELECT booking_id
-        FROM room_booking
-        ORDER BY created_at ASC
+        SELECT rb.booking_id
+        FROM room_booking rb
+        JOIN prev_alloc pa
+        ON rb.student_id = pa.student_id
+        AND rb.room_id = pa.room_id
+        ORDER BY rb.booking_id
     LOOP
         CALL process_booking(booking.booking_id);
     END LOOP;
+
+    FOR booking IN
+        SELECT booking_id
+        FROM room_booking
+        WHERE status = 'PENDING'
+        ORDER BY created_at, booking_id
+    LOOP
+        CALL process_booking(booking.booking_id);
+    END LOOP;
+
 END;
 $$;
