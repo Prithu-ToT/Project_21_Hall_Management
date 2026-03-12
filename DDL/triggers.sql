@@ -8,22 +8,34 @@ AS $$
 
 $$;
 
+-------------------------------------
 -- Trigger for semister room capasity
-CREATE OR REPLACE FUNCTION enforce_room_capasity()
+--------------------------------------
+CREATE OR REPLACE FUNCTION enforce_room_capacity()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
+DECLARE
+  v_cap INT;
 BEGIN
-  
-    IF (count_allocation (NEW.room_id) >= 6) THEN
-      RAISE EXCEPTION 
-        'Room %s is full', NEW.room_id
-         USING ERRCODE = 'P1001';
-    END IF;
-  
+
+  SELECT capacity
+  INTO v_cap
+  FROM room
+  WHERE room_id = NEW.room_id
+  FOR UPDATE;
+
+  IF count_allocation(NEW.room_id) >= v_cap THEN
+      RAISE EXCEPTION
+        'Room % is full', NEW.room_id
+        USING ERRCODE = 'P0001';
+  END IF;
+
   RETURN NEW;
+
 END;
 $$;
+
 
 CREATE OR REPLACE TRIGGER room_capasity_reached
 BEFORE INSERT ON hall_allocation
@@ -48,7 +60,10 @@ AFTER INSERT ON seat_fee_payment
 FOR EACH ROW
 EXECUTE FUNCTION activate_allocation();
 
--- History Book-keeping
+-------------------------------
+-- History Book-keeping -------
+-------------------------------
+
 CREATE OR REPLACE FUNCTION  insert_allocation_history()
 RETURNS TRIGGER
 LANGUAGE plpgsql
