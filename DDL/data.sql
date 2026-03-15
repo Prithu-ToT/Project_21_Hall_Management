@@ -1,6 +1,23 @@
+DO
+$$
+DECLARE
+    stmt TEXT;
+BEGIN
+    SELECT 'TRUNCATE TABLE '
+           || string_agg(format('%I.%I', schemaname, tablename), ', ')
+           || ' RESTART IDENTITY CASCADE;'
+    INTO stmt
+    FROM pg_tables
+    WHERE schemaname NOT IN ('pg_catalog', 'information_schema');
+
+    EXECUTE stmt;
+END;
+$$;
+
+
 -- =====================================================
 -- COMPLETE TEST DATASET FOR FULL HALL MANAGEMENT SCHEMA
--- 3 HALLS | 15 STUDENTS | ALLOCATIONS | PAYMENTS
+-- 3 HALLS | 15 STUDENTS | AUTH | ALLOCATIONS | PAYMENTS
 -- =====================================================
 
 
@@ -15,7 +32,17 @@ INSERT INTO hall (hall_name) VALUES
 
 
 -- =============================
--- 2. ROOMS (5 PER HALL)
+-- 2. HALL AUTH (ADMIN PASSWORDS)
+-- =============================
+
+INSERT INTO hall_auth (hall_id, password) VALUES
+(1, 'th_admin_pass'),
+(2, 'auh_admin_pass'),
+(3, 'swh_admin_pass');
+
+
+-- =============================
+-- 3. ROOMS (5 PER HALL)
 -- =============================
 
 INSERT INTO room (hall_id, room_number) VALUES
@@ -28,7 +55,7 @@ INSERT INTO room (hall_id, room_number) VALUES
 
 
 -- =============================
--- 3. PERSONS (15)
+-- 4. PERSONS (15)
 -- =============================
 
 INSERT INTO person (nid, name, phone_number) VALUES
@@ -50,7 +77,7 @@ INSERT INTO person (nid, name, phone_number) VALUES
 
 
 -- =============================
--- 4. STUDENTS
+-- 5. STUDENTS
 -- =============================
 
 INSERT INTO student (semester, department, person_id) VALUES
@@ -72,7 +99,29 @@ INSERT INTO student (semester, department, person_id) VALUES
 
 
 -- =============================
--- 5. HALL ALLOCATIONS (ALL PENDING)
+-- 6. STUDENT AUTH (PASSWORDS)
+-- =============================
+
+INSERT INTO student_auth (student_id, password) VALUES
+(1,'pass01'),
+(2,'pass02'),
+(3,'pass03'),
+(4,'pass04'),
+(5,'pass05'),
+(6,'pass06'),
+(7,'pass07'),
+(8,'pass08'),
+(9,'pass09'),
+(10,'pass10'),
+(11,'pass11'),
+(12,'pass12'),
+(13,'pass13'),
+(14,'pass14'),
+(15,'pass15');
+
+
+-- =============================
+-- 7. HALL ALLOCATIONS (ALL PENDING)
 -- =============================
 
 INSERT INTO hall_allocation (student_id, room_id)
@@ -86,7 +135,7 @@ VALUES
 
 
 -- =============================
--- 6. SEAT FEE PAYMENTS (FIRST 10)
+-- 8. SEAT FEE PAYMENTS (FIRST 10)
 -- =============================
 
 INSERT INTO seat_fee_payment (allocation_id, amount, bank_transaction_id)
@@ -104,7 +153,7 @@ VALUES
 
 
 -- =============================
--- 7. RESIDENT SERVICES
+-- 9. RESIDENT SERVICES
 -- =============================
 
 INSERT INTO resident_service
@@ -117,7 +166,7 @@ VALUES
 
 
 -- =============================
--- 8. RESIDENT SERVICE PAYMENTS
+-- 10. RESIDENT SERVICE PAYMENTS
 -- =============================
 
 INSERT INTO resident_service_payment
@@ -130,7 +179,7 @@ VALUES
 
 
 -- =============================
--- 9. ROOM BOOKINGS
+-- 11. ROOM BOOKINGS
 -- =============================
 
 INSERT INTO room_booking (student_id, room_id)
@@ -141,7 +190,7 @@ VALUES
 
 
 -- =============================
--- 10. ALLOCATION HISTORY
+-- 12. ALLOCATION HISTORY
 -- =============================
 
 INSERT INTO allocation_history
@@ -150,12 +199,3 @@ VALUES
 (1,2,'2025-01-01','2025-12-31'),
 (6,7,'2025-01-01','2025-12-31'),
 (11,12,'2024-01-01','2024-12-31');
-
-
--- =============================
--- STATUS CHECK
--- =============================
-
-SELECT allocation_id, student_id, room_id, status
-FROM hall_allocation
-ORDER BY allocation_id;
