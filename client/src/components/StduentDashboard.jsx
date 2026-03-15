@@ -38,6 +38,15 @@ const StudentDashboard = ({ username }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Change password state
+    const [showPwForm, setShowPwForm]   = useState(false);
+    const [currentPw, setCurrentPw]     = useState("");
+    const [newPw, setNewPw]             = useState("");
+    const [confirmPw, setConfirmPw]     = useState("");
+    const [pwLoading, setPwLoading]     = useState(false);
+    const [pwError, setPwError]         = useState(null);
+    const [pwSuccess, setPwSuccess]     = useState(false);
+
     useEffect(() => {
         const fetchStudentInfo = async () => {
             setLoading(true);
@@ -57,8 +66,56 @@ const StudentDashboard = ({ username }) => {
     }, [username]);
 
     const handleViewToggle = (view) => {
-        // clicking the active tab again closes it
         setActiveView((prev) => (prev === view ? VIEWS.NONE : view));
+    };
+
+    const handleChangePassword = async () => {
+        if (!currentPw || !newPw || !confirmPw) {
+            setPwError("All fields are required");
+            return;
+        }
+        if (newPw !== confirmPw) {
+            setPwError("New passwords do not match");
+            return;
+        }
+
+        setPwLoading(true);
+        setPwError(null);
+        setPwSuccess(false);
+
+        try {
+            const res = await fetch(BackendServer + "student/change-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    student_id:       username,
+                    current_password: currentPw,
+                    new_password:     newPw,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setPwError(data.message || "Failed to change password");
+                return;
+            }
+            setPwSuccess(true);
+            setCurrentPw(""); setNewPw(""); setConfirmPw("");
+            setTimeout(() => {
+                setShowPwForm(false);
+                setPwSuccess(false);
+            }, 1500);
+        } catch {
+            setPwError("An error occurred. Please try again.");
+        } finally {
+            setPwLoading(false);
+        }
+    };
+
+    const handleTogglePwForm = () => {
+        setShowPwForm(prev => !prev);
+        setPwError(null);
+        setPwSuccess(false);
+        setCurrentPw(""); setNewPw(""); setConfirmPw("");
     };
 
     const renderActiveCard = () => {
@@ -93,6 +150,46 @@ const StudentDashboard = ({ username }) => {
                         <InfoRow label="Name"        value={studentInfo?.name}       />
                         <InfoRow label="Department"  value={studentInfo?.department} />
                         <InfoRow label="Semester"    value={studentInfo?.semester}   />
+                    </div>
+
+                    {/* Change Password */}
+                    <div style={{ marginTop: "1rem" }}>
+                        <Button
+                            variant={showPwForm ? "outline-danger" : "outline-secondary"}
+                            onClick={handleTogglePwForm}
+                        >
+                            {showPwForm ? "Cancel" : "Change Password"}
+                        </Button>
+
+                        {showPwForm && (
+                            <div style={styles.pwForm}>
+                                {[
+                                    ["Current Password", currentPw, setCurrentPw],
+                                    ["New Password",     newPw,     setNewPw    ],
+                                    ["Confirm Password", confirmPw, setConfirmPw],
+                                ].map(([label, val, setter]) => (
+                                    <input
+                                        key={label}
+                                        type="password"
+                                        placeholder={label}
+                                        value={val}
+                                        onChange={e => setter(e.target.value)}
+                                        style={styles.pwInput}
+                                    />
+                                ))}
+
+                                {pwError   && <p style={{ color: "var(--danger)",  fontSize: "0.82rem", margin: "2px 0" }}>{pwError}</p>}
+                                {pwSuccess && <p style={{ color: "var(--success)", fontSize: "0.82rem", margin: "2px 0" }}>Password changed!</p>}
+
+                                <Button
+                                    variant="primary"
+                                    onClick={handleChangePassword}
+                                    disabled={pwLoading}
+                                >
+                                    {pwLoading ? "Saving…" : "Confirm Change"}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -184,6 +281,25 @@ const styles = {
         gap: "10px",
         marginBottom: "1.25rem",
         flexWrap: "wrap",
+    },
+    pwForm: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+        marginTop: "0.75rem",
+        padding: "1rem",
+        background: "var(--surface-2)",
+        borderRadius: "var(--radius-sm)",
+        border: "1px solid var(--border)",
+    },
+    pwInput: {
+        padding: "0.5rem 0.75rem",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius-sm)",
+        fontSize: "0.88rem",
+        background: "var(--surface)",
+        color: "var(--text-primary)",
+        outline: "none",
     },
 };
 

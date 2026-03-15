@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const bcrypt = require("bcrypt");
 const asyncWrapper = require("../asyncWrapper");
 
 // GET /student/basic/:id
@@ -44,7 +45,6 @@ router.get("/allocation/:id", asyncWrapper(async (req, res) => {
     const room_info = roomResult.rows[0];
 
     res.json({ ...restOfAlloc, ...room_info });
-    
 }));
 
 // POST /student/pay-seat-fee
@@ -61,16 +61,45 @@ router.post("/pay-seat-fee", asyncWrapper(async (req, res) => {
     res.status(200).json({ message: "Payment recorded" });
 }));
 
-module.exports = router;
-
 // GET /student/halls
-router.get("/halls", asyncWrapper(async (req, res) =>{
+router.get("/halls", asyncWrapper(async (req, res) => {
     const response = await pool.query(
-        `
-        SELECT hall_id, hall_name
-        FROM hall
-        `
-    )
+        `SELECT hall_id, hall_name FROM hall`
+    );
 
     res.status(200).json(response.rows);
-}))
+}));
+
+// POST /student/change-password
+router.post("/change-password", asyncWrapper(async (req, res) => {
+    const { student_id, current_password, new_password } = req.body;
+
+    if (!student_id || !current_password || !new_password) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const result = await pool.query(
+        `SELECT password FROM student_auth WHERE student_id = $1`,
+        [student_id]
+    );
+
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Student not found" });
+    }
+
+    const match = await bcrypt.compare(current_password, result.rows[0].password);
+    if (!match) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+
+    await pool.query(
+        `UPDATE student_auth SET password = $1 WHERE student_id = $2`,
+        [hashed, student_id]
+    );
+
+    res.json({ message: "Password changed successfully" });
+}));
+
+module.exports = router;

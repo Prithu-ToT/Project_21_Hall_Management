@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const bcrypt = require("bcrypt");
 const asyncWrapper = require("../asyncWrapper");
 
 router.post("/login", asyncWrapper(async (req, res) => {
@@ -28,7 +29,8 @@ router.post("/login", asyncWrapper(async (req, res) => {
         return res.status(404).json({ message: "Username not found" });
     }
 
-    if (result.rows[0].password !== password) {
+    const match = await bcrypt.compare(password, result.rows[0].password);
+    if (!match) {
         return res.status(401).json({ message: "Wrong password" });
     }
 
