@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { BackendServer } from "../App";
-import Button from "./Button";
+import { BackendServer } from "../../App";
+import Button from "../Button";
 
 const InfoRow = ({ label, value = "—" }) => (
     <div style={styles.infoRow}>

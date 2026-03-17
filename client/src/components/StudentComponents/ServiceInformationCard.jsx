@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { BackendServer } from "../App";
-import Button from "./Button";
+import { BackendServer } from "../../App";
+import Button from "../Button";
 
 const PaidBadge = ({ paid }) => {
     const color = paid ? "var(--success)" : "#f59e0b";

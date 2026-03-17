@@ -1,7 +1,7 @@
 import Header from "./components/Header";
 import LoginForm from "./components/LoginForm";
 import { useState } from "react";
-import StudentDashboard from "./components/StduentDashboard";
+import StudentDashboard from "./components/StudentComponents/StduentDashboard";
 
 export const BackendServer = "http://localhost:5000/";
 

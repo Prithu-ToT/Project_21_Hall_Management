@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import Button from "./Button";
-import Header from "./Header";
-import { BackendServer } from "../App";
+import Button from "../Button";
+import Header from "../Header";
+import { BackendServer } from "../../App";
 import AllocationInformationCard from "./AllocationInformationCard";
 import ServiceInformationCard from "./ServiceInformationCard";
 import BookingInformationCard from "./BookingInformationCard";
