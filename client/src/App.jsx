@@ -24,7 +24,7 @@ export default function App() {
   }
 
   if(session?.role === "student"){
-    return <StudentDashboard username={session.username} />
+    return <StudentDashboard username={session.username} onLogout = {handleLogout}/>
   }
   
   return (

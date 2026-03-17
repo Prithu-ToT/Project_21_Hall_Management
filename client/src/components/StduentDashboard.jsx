@@ -32,7 +32,7 @@ const InfoRow = ({ label, value = "—" }) => (
     </div>
 );
 
-const StudentDashboard = ({ username }) => {
+const StudentDashboard = ({ username, onLogout }) => {
     const [activeView, setActiveView] = useState(VIEWS.NONE);
     const [studentInfo, setStudentInfo] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -131,6 +131,12 @@ const StudentDashboard = ({ username }) => {
         <div className="page-shell-top">
             <div style={styles.container} className="fade-up">
                 <Header title="Student Dashboard" />
+
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
+                    <Button variant="outline-danger" onClick={onLogout}>
+                        Sign Out
+                    </Button>
+                </div>
 
                 {/* Student Information Card */}
                 <div style={styles.card} className="fade-up fade-up-1">
