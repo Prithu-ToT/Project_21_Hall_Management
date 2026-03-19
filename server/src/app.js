@@ -4,7 +4,8 @@ const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const studentBookingRoutes = require("./routes/studentBookingRoutes");
 const studentServiceRoutes = require("./routes/studentServiceRoutes");
-
+const adminRoutes = require("./routes/adminRoutes");
+const sysAdminRoutes = require("./routes/sysAdminRoutes");
 
 const app = express();
 
@@ -21,6 +22,9 @@ app.use("/", authRoutes);
 app.use("/student", studentRoutes);
 app.use("/student/bookings", studentBookingRoutes);
 app.use("/student/services", studentServiceRoutes);
+
+app.use("/admin", adminRoutes);
+app.use("/sysadmin", sysAdminRoutes);
 
 // Error handling middleware — must be at the bottom
 app.use((err, req, res, next) => {

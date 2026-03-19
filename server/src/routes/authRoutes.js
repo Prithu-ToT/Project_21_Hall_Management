@@ -29,12 +29,20 @@ router.post("/login", asyncWrapper(async (req, res) => {
         return res.status(404).json({ message: "Username not found" });
     }
 
-    const match = await bcrypt.compare(password, result.rows[0].password);
-    if (!match) {
+    const storedPassword = result.rows[0].password;
+
+    let passwordMatch;
+    passwordMatch = await bcrypt.compare(password, storedPassword);
+
+    if (!passwordMatch) {
         return res.status(401).json({ message: "Wrong password" });
     }
 
-    res.json({ message: "Login successful" });
+    const resolvedRole = (role === "admin" && username.toLowerCase() === "sysadmin")
+        ? "sysadmin"
+        : role;
+
+    res.json({ message: "Login successful", role: resolvedRole });
 }));
 
 module.exports = router;

@@ -20,9 +20,10 @@ const students = Array.from({ length: 15 }, (_, i) => ({
 }));
 
 const halls = [
-    { hall_id: 1, plain_password: "th@123"  },
-    { hall_id: 2, plain_password: "auh@123" },
-    { hall_id: 3, plain_password: "swh@123" },
+    { hall_id: 1, plain_password: "th1"  },
+    { hall_id: 2, plain_password: "auh2" },
+    { hall_id: 3, plain_password: "swh3" },
+    { hall_id: 4, plain_password: "sys4" },
 ];
 
 async function seed() {

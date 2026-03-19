@@ -1,40 +1,38 @@
 import { useState } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
-
 import { BackendServer } from "../App";
 
-export default function LoginForm({onLogin}) {
+export default function LoginForm({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole]         = useState("");
 
-  function resetForm (){
+  function resetForm() {
     setUsername("");
     setPassword("");
     setRole("");
-  };
+  }
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       alert("Please fill username and password");
       return;
     }
-
     if (!role) {
       alert("Please select a role");
       return;
     }
-    
+
     const userInput = { username, password, role };
 
     try {
       const response = await fetch(BackendServer + "login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userInput)
+        body: JSON.stringify(userInput),
       });
 
       const confirmation = await response.json();
@@ -45,13 +43,11 @@ export default function LoginForm({onLogin}) {
         return;
       }
 
-      // callback with data
-      const userDetails = {
+      onLogin({
         username: userInput.username,
-        role: userInput.role,
-      };
-
-      onLogin(userDetails);
+        // Backend returns the resolved role (distinguishes sysadmin from admin)
+        role: confirmation.role ?? userInput.role,
+      });
 
     } catch (error) {
       alert("An error occurred. Please try again.");
@@ -98,7 +94,6 @@ export default function LoginForm({onLogin}) {
           required
         />
 
-        {/* Role selector */}
         <div className="mb-4">
           <label className="form-label">Sign in as</label>
           <div className="d-flex gap-2">
@@ -109,7 +104,6 @@ export default function LoginForm({onLogin}) {
             >
               Student
             </Button>
-
             <Button
               variant={role === "admin" ? "danger" : "outline-danger"}
               onClick={() => setRole("admin")}

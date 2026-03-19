@@ -60,4 +60,31 @@ BEGIN
 END;
 $$;
 
-SELECT get_room_id('SWH', 301);
+
+CREATE OR REPLACE FUNCTION get_hall_alloc_count(p_hall_id INT)
+RETURNS TABLE(
+  TTL_ALC INT,
+  TTL_CAP INT
+)
+LANGUAGE plpgsql
+AS $$
+  
+BEGIN
+  
+  SELECT COUNT(ha.*), SUM(rm.capacity)
+  INTO TTL_ALC, TTL_CAP
+  
+  FROM (
+    SELECT *
+    FROM room
+    WHERE hall_id = p_hall_id 
+      AND is_active = TRUE
+  ) rm
+  
+  LEFT JOIN hall_allocation ha 
+    ON ha.room_id = rm.room_id;
+  
+  RETURN QUERY
+  SELECT TTL_ALC, TTL_CAP;
+END;
+$$;

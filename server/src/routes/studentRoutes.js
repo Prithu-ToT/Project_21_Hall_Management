@@ -64,7 +64,7 @@ router.post("/pay-seat-fee", asyncWrapper(async (req, res) => {
 // GET /student/halls
 router.get("/halls", asyncWrapper(async (req, res) => {
     const response = await pool.query(
-        `SELECT hall_id, hall_name FROM hall`
+        `SELECT hall_id, hall_name FROM hall WHERE LOWER(hall_name) != 'sysadmin'`
     );
 
     res.status(200).json(response.rows);
