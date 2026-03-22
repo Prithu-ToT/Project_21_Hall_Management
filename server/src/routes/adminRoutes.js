@@ -4,8 +4,8 @@ const pool = require("../db");
 const bcrypt = require("bcrypt");
 const asyncWrapper = require("../asyncWrapper");
 
+// GET /admin/hall-info/:hallName
 router.get("/hall-info/:hallName", asyncWrapper(async (req, res) => {
-
     const hallName = req.params.hallName;
     const hallRes = await pool.query(
         `SELECT hall_id, hall_name FROM hall WHERE hall_name = $1`,
@@ -24,21 +24,17 @@ router.get("/hall-info/:hallName", asyncWrapper(async (req, res) => {
     );
 
     const alloc = allocRes.rows[0];
-    console.log(alloc);
     res.json({
         hall_id: hall.hall_id,
         hall_name: hall.hall_name,
         total_students: alloc.ttl_alc,
-        available_seats: alloc.rem_cap
+        available_seats: alloc.rem_cap,
     });
 }));
 
-//POST /admin/change-password
+// POST /admin/change-password
 router.post("/change-password", asyncWrapper(async (req, res) => {
-
-    const {hallId, currentPassword, newPassword}  = req.body;
-
-    console.log(req.body);
+    const { hallId, currentPassword, newPassword } = req.body;
 
     if (!hallId || !currentPassword || !newPassword) {
         return res.status(400).json({ message: "All fields are required" });
@@ -46,24 +42,24 @@ router.post("/change-password", asyncWrapper(async (req, res) => {
 
     const pwRes = await pool.query(
         `SELECT password FROM hall_auth
-        WHERE hall_id = $1`, [hallId]
+         WHERE hall_id = $1`,
+        [hallId]
     );
 
     const oldPw = pwRes.rows[0].password;
     const match = await bcrypt.compare(currentPassword, oldPw);
 
-    if(!match){
+    if (!match) {
         return res.status(401).json({ message: "Current password is incorrect" });
     }
 
     const hashedPw = await bcrypt.hash(newPassword, 10);
     await pool.query(
-        `UPDATE  hall_auth SET password = $1 WHERE hall_id = $2`,
+        `UPDATE hall_auth SET password = $1 WHERE hall_id = $2`,
         [hashedPw, hallId]
     );
 
-    return res.status(200).json({message : "Password Changed Successfully"});
+    return res.status(200).json({ message: "Password Changed Successfully" });
 }));
-
 
 module.exports = router;

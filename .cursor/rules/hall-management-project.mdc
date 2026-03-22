@@ -1,0 +1,27 @@
+---
+description: 
+alwaysApply: true
+---
+
+# Hall Management Project — Project Rules
+
+## Philosophy
+
+- **Database-focused educational project**: Maximize SQL exposure. Put business logic in functions, procedures, triggers. Keep Node.js thin — routes validate input, call DB, return results.
+- **No high-level abstractions**: No ORMs. Use raw `pool.query()` and parameterized queries. Prefer DB functions for multi-step atomic work (e.g. `add_hall_with_auth`, `semester_rollover`).
+- **ACID maintainability**: Use transactions in DB functions/procedures for multi-table ops. Rely on triggers for integrity (capacity, booking limits, history). Avoid scattering transaction logic in route handlers.
+
+## Backend Guidelines
+
+- **New features**: Prefer `SQL/functions.sql` or `SQL/procedure.sql` for reusable logic. Call `SELECT fn(...)` or `CALL proc(...)` from routes.
+- **Error handling**: Map PostgreSQL error codes in app.js (e.g. 23505 unique, 23503 FK). Let DB constraints and triggers surface domain errors.
+- **Endpoint spec**: See `ENDPOINTS.md` for the list of endpoints to implement and their request/response shapes. User implements endpoints; AI does not implement backend routes.
+
+## Frontend Guidelines
+
+- **AI owns design**: AI designs and builds frontend components. Keep styling consistent.
+- **Design system**: Use `client/src/index.css` variables:
+  - Colors: `--navy`, `--navy-light`, `--accent`, `--success`, `--danger`, `--surface`, `--surface-2`, `--border`, `--text-primary`, `--text-secondary`
+  - Radius: `--radius`, `--radius-sm`; Shadows: `--shadow-sm`, `--shadow-md`, `--shadow-lg`
+  - Fonts: Sora for headings, DM Sans for body
+- **Components**: Reuse `Button`, `TextInput`, card patterns. Use `page-shell`, `card-shell`, `fade-up` for layout and animations.

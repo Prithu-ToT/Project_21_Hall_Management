@@ -1,0 +1,96 @@
+const express = require("express");
+const router = express.Router();
+const pool = require("../db");
+const asyncWrapper = require("../asyncWrapper");
+
+// Mounted at /admin/allocation — see app.js
+
+// GET /admin/allocation/rooms/:hallId
+router.get("/rooms/:hallId", asyncWrapper(async (req, res) => {
+    const { hallId } = req.params;
+    const result = await pool.query(
+        `SELECT room_id, room_number, capacity
+         FROM room
+         WHERE hall_id = $1 AND is_active = TRUE
+         ORDER BY room_number`,
+        [hallId]
+    );
+    res.json(result.rows);
+}));
+
+// GET /admin/allocation/room-allocations/:hallId/:roomId
+router.get("/room-allocations/:hallId/:roomId", asyncWrapper(async (req, res) => {
+    const { hallId, roomId } = req.params;
+    const result = await pool.query(
+        `SELECT ha.allocation_id, ha.student_id, ha.status
+         FROM hall_allocation ha
+         JOIN room r ON r.room_id = ha.room_id
+         WHERE ha.room_id = $1 AND r.hall_id = $2`,
+        [roomId, hallId]
+    );
+    res.json(result.rows);
+}));
+
+// DELETE /admin/allocation/allocations/:hallId/:allocationId
+router.delete("/allocations/:hallId/:allocationId", asyncWrapper(async (req, res) => {
+    const { hallId, allocationId } = req.params;
+    const del = await pool.query(
+        `DELETE FROM hall_allocation ha
+         USING room r
+         WHERE ha.allocation_id = $1
+           AND ha.room_id = r.room_id
+           AND r.hall_id = $2
+         RETURNING ha.allocation_id`,
+        [allocationId, hallId]
+    );
+    if (del.rowCount === 0) {
+        return res.status(404).json({ message: "Allocation not found in this hall." });
+    }
+    res.json({ message: "Allocation removed." });
+}));
+
+// POST /admin/allocation/allocations
+router.post("/allocations", asyncWrapper(async (req, res) => {
+    const { hallId, room_id, student_id } = req.body;
+    if (!hallId || !room_id || !student_id) {
+        return res.status(400).json({ message: "hallId, room_id, and student_id are required." });
+    }
+    const check = await pool.query(
+        `SELECT r.room_id FROM room r
+         WHERE r.room_id = $1 AND r.hall_id = $2 AND r.is_active = TRUE`,
+        [room_id, hallId]
+    );
+    if (check.rows.length === 0) {
+        return res.status(400).json({ message: "Room not found in this hall." });
+    }
+    const ins = await pool.query(
+        `INSERT INTO hall_allocation (student_id, room_id)
+         VALUES ($1, $2)
+         RETURNING allocation_id`,
+        [student_id, room_id]
+    );
+    res.status(201).json({
+        message: "Allocation created.",
+        allocation_id: ins.rows[0].allocation_id,
+    });
+}));
+
+// GET /admin/allocation/student-location/:hallId/:studentId
+router.get("/student-location/:hallId/:studentId", asyncWrapper(async (req, res) => {
+    const { hallId, studentId } = req.params;
+    const result = await pool.query(
+        `SELECT r.room_number
+         FROM hall_allocation ha
+         JOIN room r ON r.room_id = ha.room_id
+         WHERE ha.student_id = $1 AND r.hall_id = $2`,
+        [studentId, hallId]
+    );
+    if (result.rows.length === 0) {
+        return res.status(404).json({
+            message: "No allocation for this student in this hall.",
+        });
+    }
+    res.json(result.rows[0]);
+}));
+
+module.exports = router;

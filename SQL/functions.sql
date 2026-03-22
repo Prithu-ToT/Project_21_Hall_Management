@@ -78,13 +78,16 @@ BEGIN
 END;
 $$;
 
+-- get hall allocation count and remaining capacity
 CREATE OR REPLACE FUNCTION get_hall_alloc_count(p_hall_id INT)
 RETURNS TABLE(
   TTL_ALC INT,
-  TTL_CAP INT
+  REM_CAP INT
 )
 LANGUAGE plpgsql
 AS $$
+DECLARE
+  TTL_CAP INT;
   
 BEGIN
   
@@ -102,6 +105,6 @@ BEGIN
     ON ha.room_id = rm.room_id;
   
   RETURN QUERY
-  SELECT TTL_ALC, TTL_CAP;
+  SELECT TTL_ALC , (TTL_CAP-TTL_ALC);
 END;
 $$;
