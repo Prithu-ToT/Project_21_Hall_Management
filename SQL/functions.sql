@@ -61,6 +61,23 @@ END;
 $$;
 
 
+-- atomic insert,  hall and hall_auth both in one transaction
+CREATE OR REPLACE FUNCTION add_hall_with_auth(p_hall_name TEXT, p_password TEXT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_hall_id INT;
+BEGIN
+    INSERT INTO hall (hall_name) VALUES (p_hall_name)
+    RETURNING hall_id INTO v_hall_id;
+
+    INSERT INTO hall_auth (hall_id, password) VALUES (v_hall_id, p_password);
+
+    RETURN v_hall_id;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION get_hall_alloc_count(p_hall_id INT)
 RETURNS TABLE(
   TTL_ALC INT,

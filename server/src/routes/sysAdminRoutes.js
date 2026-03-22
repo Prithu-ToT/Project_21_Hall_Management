@@ -24,29 +24,13 @@ router.post("/add-hall", asyncWrapper(async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const client = await pool.connect();
-    try {
-        await client.query("BEGIN");
+    const result = await pool.query(
+        "SELECT add_hall_with_auth($1, $2) AS hall_id",
+        [hallName, hashedPassword]
+    );
 
-        const hallRes = await client.query(
-            `INSERT INTO hall (hall_name) VALUES ($1) RETURNING hall_id`,
-            [hallName]
-        );
-        const hallId = hallRes.rows[0].hall_id;
-
-        await client.query(
-            `INSERT INTO hall_auth (hall_id, password) VALUES ($1, $2)`,
-            [hallId, hashedPassword]
-        );
-
-        await client.query("COMMIT");
-        res.status(201).json({ message: "Hall created successfully.", hall_id: hallId });
-    } catch (err) {
-        await client.query("ROLLBACK");
-        throw err;
-    } finally {
-        client.release();
-    }
+    const hallId = result.rows[0].hall_id;
+    res.status(201).json({ message: "Hall created successfully.", hall_id: hallId });
 }));
 
 // POST /sysadmin/add-room
