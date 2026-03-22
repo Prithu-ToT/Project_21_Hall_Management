@@ -8,7 +8,7 @@ const asyncWrapper = require("../asyncWrapper");
 router.get("/hall-info/:hallName", asyncWrapper(async (req, res) => {
     const hallName = req.params.hallName;
     const hallRes = await pool.query(
-        `SELECT hall_id, hall_name FROM hall WHERE hall_name = $1`,
+        `SELECT hall_id, hall_name, seat_fee FROM hall WHERE hall_name = $1`,
         [hallName]
     );
 
@@ -27,8 +27,37 @@ router.get("/hall-info/:hallName", asyncWrapper(async (req, res) => {
     res.json({
         hall_id: hall.hall_id,
         hall_name: hall.hall_name,
+        seat_fee: parseFloat(hall.seat_fee ?? 0),
         total_students: alloc.ttl_alc,
         available_seats: alloc.rem_cap,
+    });
+}));
+
+// PATCH /admin/seat-fee — set or update seat_fee for hall
+router.patch("/seat-fee", asyncWrapper(async (req, res) => {
+    const { hallId, seatFee } = req.body;
+
+    if (!hallId || seatFee == null) {
+        return res.status(400).json({ message: "hallId and seatFee are required." });
+    }
+
+    const fee = parseFloat(seatFee);
+    if (isNaN(fee) || fee < 0) {
+        return res.status(400).json({ message: "seatFee must be a non-negative number." });
+    }
+
+    const upd = await pool.query(
+        `UPDATE hall SET seat_fee = $1 WHERE hall_id = $2 RETURNING hall_id, seat_fee`,
+        [fee, hallId]
+    );
+
+    if (upd.rowCount === 0) {
+        return res.status(404).json({ message: "Hall not found." });
+    }
+
+    res.json({
+        message: "Seat fee updated.",
+        seat_fee: parseFloat(upd.rows[0].seat_fee),
     });
 }));
 

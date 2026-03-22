@@ -51,6 +51,13 @@ const AdminDashboard = ({ username, onLogout }) => {
     const [pwError, setPwError]         = useState(null);
     const [pwSuccess, setPwSuccess]     = useState(false);
 
+    // Seat fee form state
+    const [showSeatFeeForm, setShowSeatFeeForm]   = useState(false);
+    const [seatFeeInput, setSeatFeeInput]         = useState("");
+    const [seatFeeLoading, setSeatFeeLoading]     = useState(false);
+    const [seatFeeError, setSeatFeeError]         = useState(null);
+    const [seatFeeSuccess, setSeatFeeSuccess]     = useState(false);
+
     useEffect(() => {
         const fetchHallInfo = async () => {
             setLoading(true);
@@ -124,6 +131,49 @@ const AdminDashboard = ({ username, onLogout }) => {
         }
     };
 
+    const handleSeatFeeUpdate = async () => {
+        setSeatFeeError(null);
+        setSeatFeeSuccess(false);
+
+        if (!hallInfo?.hall_id) {
+            setSeatFeeError("Hall information not loaded. Please refresh.");
+            return;
+        }
+
+        const val = parseFloat(seatFeeInput);
+        if (isNaN(val) || val < 0) {
+            setSeatFeeError("Enter a valid non-negative amount.");
+            return;
+        }
+
+        setSeatFeeLoading(true);
+        try {
+            const response = await fetch(BackendServer + "admin/seat-fee", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hallId:   hallInfo.hall_id,
+                    seatFee:  val,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                setSeatFeeError(data.message || "Failed to update seat fee.");
+            } else {
+                setSeatFeeSuccess(true);
+                setHallInfo((prev) => (prev ? { ...prev, seat_fee: data.seat_fee } : null));
+                setTimeout(() => {
+                    setShowSeatFeeForm(false);
+                    setSeatFeeSuccess(false);
+                }, 1500);
+            }
+        } catch {
+            setSeatFeeError("Network error. Please try again.");
+        } finally {
+            setSeatFeeLoading(false);
+        }
+    };
+
     const renderActiveCard = () => {
         switch (activeView) {
             case VIEWS.ALLOCATION: return <AdminAllocationCard hallId={hallInfo?.hall_id} />;
@@ -152,6 +202,7 @@ const AdminDashboard = ({ username, onLogout }) => {
 
                     <div style={styles.infoGrid}>
                         <InfoRow label="Hall Name" value={hallInfo?.hall_name} />
+                        <InfoRow label="Seat Fee" value={hallInfo?.seat_fee != null ? `${hallInfo.seat_fee}` : "—"} />
                     </div>
 
                     <div style={styles.statRow}>
@@ -165,6 +216,45 @@ const AdminDashboard = ({ username, onLogout }) => {
                             value={hallInfo?.available_seats}
                             accent="var(--success)"
                         />
+                    </div>
+
+                    {/* Seat Fee section */}
+                    <div style={styles.pwSection}>
+                        <button
+                            style={styles.pwToggleBtn}
+                            onClick={() => {
+                                setShowSeatFeeForm((v) => !v);
+                                setSeatFeeError(null);
+                                setSeatFeeSuccess(false);
+                                if (!showSeatFeeForm) {
+                                    setSeatFeeInput(hallInfo?.seat_fee != null ? String(hallInfo.seat_fee) : "");
+                                }
+                            }}
+                        >
+                            {showSeatFeeForm ? "Cancel" : "Set Seat Fee"}
+                        </button>
+
+                        {showSeatFeeForm && (
+                            <div style={styles.pwForm}>
+                                <TextInput
+                                    label="Seat Fee (amount)"
+                                    type="number"
+                                    value={seatFeeInput}
+                                    onChange={(e) => setSeatFeeInput(e.target.value)}
+                                    placeholder="e.g. 5000"
+                                />
+                                {seatFeeError   && <p style={{ color: "var(--danger)",  fontSize: "0.83rem", margin: "0.25rem 0" }}>{seatFeeError}</p>}
+                                {seatFeeSuccess && <p style={{ color: "var(--success)", fontSize: "0.83rem", margin: "0.25rem 0" }}>Seat fee updated.</p>}
+                                <Button
+                                    variant="primary"
+                                    className="w-100"
+                                    onClick={handleSeatFeeUpdate}
+                                    disabled={seatFeeLoading}
+                                >
+                                    {seatFeeLoading ? "Updating…" : "Update Seat Fee"}
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Change Password section */}

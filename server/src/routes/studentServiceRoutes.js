@@ -24,16 +24,15 @@ router.get("/:studentId", asyncWrapper(async (req, res) => {
         `SELECT rs.service_id, service_name,
                 TO_CHAR(service_period_start, 'DD-Mon-YYYY') AS service_period_start,
                 TO_CHAR(service_period_end,   'DD-Mon-YYYY') AS service_period_end,
-                service_fee_amount, rsp.payment_id
+                service_fee_amount, rs.status
          FROM resident_service rs
-         LEFT JOIN resident_service_payment rsp ON rs.service_id = rsp.service_id
          WHERE rs.allocation_id = $1`,
-        [aid]                           // fix: was passing student_id here instead of allocation_id
+        [aid]
     );
 
-    const formattedRows = response.rows.map(({ payment_id, ...rest }) => ({
+    const formattedRows = response.rows.map(({ status, ...rest }) => ({
         ...rest,
-        paid: payment_id !== null,      // fix: was returning response.rows, not formattedRows
+        paid: status === "PAID",
     }));
 
     res.status(200).json(formattedRows);

@@ -51,11 +51,29 @@ CREATE OR REPLACE FUNCTION activate_allocation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
-BEGIN
-  UPDATE hall_allocation ha
-  SET status = 'ACTIVE'
-  WHERE ha.allocation_id = NEW.allocation_id;
 
+DECLARE
+  v_paid_fees NUMERIC(10,2);
+  v_student_id BIGINT;
+  v_room_id INT;
+BEGIN
+  SELECT SUM(amount) INTO v_paid_fees
+  FROM seat_fee_payment
+  WHERE allocation_id = NEW.allocation_id;
+
+  IF v_paid_fees >= NEW.amount THEN
+    UPDATE hall_allocation ha
+    SET status = 'ACTIVE'
+    WHERE ha.allocation_id = NEW.allocation_id;
+
+    SELECT student_id, room_id
+    INTO v_student_id, v_room_id
+    FROM hall_allocation
+    WHERE allocation_id = NEW.allocation_id;
+
+    INSERT INTO room_booking (student_id, room_id)
+    VALUES (v_student_id, v_room_id);
+  END IF;
   RETURN NEW;
 END;
 $$;

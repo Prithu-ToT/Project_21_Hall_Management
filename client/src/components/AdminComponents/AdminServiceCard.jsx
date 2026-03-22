@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { BackendServer } from "../../App";
 import Button from "../Button";
+import TextInput from "../TextInput";
 
 const StatusBadge = ({ status }) => {
     const color = status === "PAID" ? "var(--success)" : "#f59e0b";
@@ -46,6 +47,17 @@ const AdminServiceCard = ({ hallId }) => {
     const [lookupLoading, setLookupLoading] = useState(false);
     const [lookupError, setLookupError] = useState(null);
     const [servicesByStudent, setServicesByStudent] = useState([]);
+
+    // --- Add Service form ---
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [addStudentId, setAddStudentId] = useState("");
+    const [addServiceName, setAddServiceName] = useState("");
+    const [addPeriodStart, setAddPeriodStart] = useState("");
+    const [addPeriodEnd, setAddPeriodEnd] = useState("");
+    const [addFeeAmount, setAddFeeAmount] = useState("");
+    const [addError, setAddError] = useState(null);
+    const [adding, setAdding] = useState(false);
+    const [addForAllLoading, setAddForAllLoading] = useState(false);
 
     const loadServiceNames = async () => {
         if (!hallId) return;
@@ -126,6 +138,103 @@ const AdminServiceCard = ({ hallId }) => {
         } finally {
             setLookupLoading(false);
         }
+    };
+
+    const validateServiceFields = () => {
+        if (!addServiceName.trim()) return "Service name is required.";
+        if (!addPeriodStart) return "Period start is required.";
+        if (!addPeriodEnd) return "Period end is required.";
+        const fee = parseFloat(addFeeAmount);
+        if (isNaN(fee) || fee < 0) return "Enter a valid non-negative fee.";
+        if (addPeriodStart > addPeriodEnd) return "Period end must be on or after period start.";
+        return null;
+    };
+
+    const handleAddService = async () => {
+        const err = validateServiceFields();
+        if (err) {
+            setAddError(err);
+            return;
+        }
+        const sid = addStudentId.trim();
+        if (!sid) {
+            setAddError("Student ID is required for adding to one student.");
+            return;
+        }
+        setAdding(true);
+        setAddError(null);
+        try {
+            const res = await fetch(BackendServer + "admin/service", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hallId: Number(hallId),
+                    student_id: sid,
+                    service_name: addServiceName.trim(),
+                    service_period_start: addPeriodStart,
+                    service_period_end: addPeriodEnd,
+                    service_fee_amount: parseFloat(addFeeAmount),
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setAddError(data.message || "Failed to add service.");
+                return;
+            }
+            setShowAddForm(false);
+            resetAddForm();
+            loadServiceNames();
+            if (selectedName) loadServicesByName(selectedName);
+        } catch {
+            setAddError("Network error.");
+        } finally {
+            setAdding(false);
+        }
+    };
+
+    const handleAddForAll = async () => {
+        const err = validateServiceFields();
+        if (err) {
+            setAddError(err);
+            return;
+        }
+        setAddForAllLoading(true);
+        setAddError(null);
+        try {
+            const res = await fetch(BackendServer + "admin/service/add-for-all", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    hallId: Number(hallId),
+                    service_name: addServiceName.trim(),
+                    service_period_start: addPeriodStart,
+                    service_period_end: addPeriodEnd,
+                    service_fee_amount: parseFloat(addFeeAmount),
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setAddError(data.message || "Failed to add service for all.");
+                return;
+            }
+            setShowAddForm(false);
+            resetAddForm();
+            loadServiceNames();
+            if (selectedName) loadServicesByName(selectedName);
+        } catch {
+            setAddError("Network error.");
+        } finally {
+            setAddForAllLoading(false);
+        }
+    };
+
+    const resetAddForm = () => {
+        setAddStudentId("");
+        setAddServiceName("");
+        setAddPeriodStart("");
+        setAddPeriodEnd("");
+        setAddFeeAmount("");
+        setAddError(null);
     };
 
     if (!hallId) {
@@ -307,6 +416,90 @@ const AdminServiceCard = ({ hallId }) => {
                     </div>
                 )}
             </section>
+
+            {/* ── Add Services ── */}
+            <section>
+                <h3 style={styles.sectionTitle}>Add Services</h3>
+                {showAddForm ? (
+                    <div style={styles.addForm}>
+                        <TextInput
+                            label="Student ID"
+                            value={addStudentId}
+                            onChange={(e) => setAddStudentId(e.target.value)}
+                            placeholder="Required for adding to one student"
+                        />
+                        <TextInput
+                            label="Service Name"
+                            value={addServiceName}
+                            onChange={(e) => setAddServiceName(e.target.value)}
+                            placeholder="e.g. Laundry"
+                        />
+                        <div style={styles.row}>
+                            <TextInput
+                                label="Period Start"
+                                type="date"
+                                value={addPeriodStart}
+                                onChange={(e) => setAddPeriodStart(e.target.value)}
+                            />
+                            <TextInput
+                                label="Period End"
+                                type="date"
+                                value={addPeriodEnd}
+                                onChange={(e) => setAddPeriodEnd(e.target.value)}
+                            />
+                        </div>
+                        <TextInput
+                            label="Fee Amount"
+                            type="number"
+                            value={addFeeAmount}
+                            onChange={(e) => setAddFeeAmount(e.target.value)}
+                            placeholder="e.g. 500"
+                        />
+                        {addError && (
+                            <p style={{ color: "var(--danger)", fontSize: "0.85rem", margin: "0.5rem 0" }}>
+                                {addError}
+                            </p>
+                        )}
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => {
+                                    setShowAddForm(false);
+                                    resetAddForm();
+                                }}
+                                disabled={adding || addForAllLoading}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleAddService}
+                                disabled={adding || addForAllLoading}
+                            >
+                                {adding ? "Adding…" : "Add for this student"}
+                            </Button>
+                            <Button
+                                variant="outline-primary"
+                                onClick={handleAddForAll}
+                                disabled={adding || addForAllLoading}
+                            >
+                                {addForAllLoading ? "Adding…" : "Add for all"}
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <Button
+                        variant="outline-primary"
+                        onClick={() => {
+                            setShowAddForm(true);
+                            setAddError(null);
+                        }}
+                        style={{ width: "100%" }}
+                    >
+                        + Add Service
+                    </Button>
+                )}
+            </section>
         </div>
     );
 };
@@ -385,6 +578,12 @@ const styles = {
         borderStyle: "solid",
         borderWidth: "0 0 1px 0",
         verticalAlign: "middle",
+    },
+    addForm: {
+        background: "var(--surface-2)",
+        borderRadius: "var(--radius)",
+        padding: "1.25rem",
+        border: "1px solid var(--border)",
     },
 };
 
