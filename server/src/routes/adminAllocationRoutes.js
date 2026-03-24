@@ -93,4 +93,57 @@ router.get("/student-location/:hallId/:studentId", asyncWrapper(async (req, res)
     res.json(result.rows[0]);
 }));
 
+// GET /admin/allocation/history-room/:hallId/:roomId
+router.get("/history-room/:hallId/:roomId", asyncWrapper(async (req, res) => {
+    const { hallId, roomId } = req.params;
+    const result = await pool.query(
+        `SELECT ah.history_id, ah.student_id, ah.start_date, ah.end_date
+         FROM allocation_history ah
+         JOIN room r ON r.room_id = ah.room_id
+         WHERE ah.room_id = $1 AND r.hall_id = $2
+         ORDER BY ah.start_date DESC, ah.history_id DESC`,
+        [roomId, hallId]
+    );
+    res.json(result.rows);
+}));
+
+// GET /admin/allocation/history-student/:hallId/:studentId
+router.get("/history-student/:hallId/:studentId", asyncWrapper(async (req, res) => {
+    const { hallId, studentId } = req.params;
+    const result = await pool.query(
+        `SELECT ah.history_id, ah.room_id, r.room_number, ah.start_date, ah.end_date
+         FROM allocation_history ah
+         JOIN room r ON r.room_id = ah.room_id
+         WHERE ah.student_id = $1 AND r.hall_id = $2
+         ORDER BY ah.start_date DESC, ah.history_id DESC`,
+        [studentId, hallId]
+    );
+    res.json(result.rows);
+}));
+
+// DELETE /admin/allocation/history-before/:hallId
+router.delete("/history-before/:hallId", asyncWrapper(async (req, res) => {
+    const { hallId } = req.params;
+    const { beforeDate } = req.body;
+
+    if (!beforeDate) {
+        return res.status(400).json({ message: "beforeDate is required." });
+    }
+
+    const del = await pool.query(
+        `DELETE FROM allocation_history ah
+         USING room r
+         WHERE ah.room_id = r.room_id
+           AND r.hall_id = $1
+           AND ah.start_date < $2::date
+         RETURNING ah.history_id`,
+        [hallId, beforeDate]
+    );
+
+    res.json({
+        message: "History cleanup completed.",
+        deleted_count: del.rowCount,
+    });
+}));
+
 module.exports = router;

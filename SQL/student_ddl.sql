@@ -83,7 +83,7 @@ CREATE TABLE hall_allocation (
 CREATE TABLE seat_fee_payment (
 
     payment_id BIGINT GENERATED ALWAYS AS IDENTITY,
-    allocation_id BIGINT NOT NULL UNIQUE,
+    allocation_id BIGINT NOT NULL,
     amount NUMERIC(10,2) NOT NULL,
     bank_transaction_id VARCHAR(32) UNIQUE,
 
@@ -118,7 +118,7 @@ CREATE TABLE resident_service (
 
 CREATE TABLE resident_service_payment (
     payment_id BIGINT GENERATED ALWAYS AS IDENTITY,
-    service_id BIGINT NOT NULL UNIQUE,
+    service_id BIGINT NOT NULL,
     amount_paid NUMERIC(10,2) NOT NULL,
     bank_transaction_id VARCHAR(32) UNIQUE,
 

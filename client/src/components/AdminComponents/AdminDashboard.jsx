@@ -5,21 +5,25 @@ import TextInput from "../TextInput";
 import { BackendServer } from "../../App";
 import AdminAllocationCard from "./AdminAllocationCard";
 import AdminServiceCard from "./AdminServiceCard";
+import AdminActionCenter from "./AdminActionCenter";
 
 const VIEWS = {
     NONE:       "NONE",
     ALLOCATION: "ALLOCATION",
     SERVICE:    "SERVICE",
+    ACTIONS:    "ACTIONS",
 };
 
 const PANEL_CARDS = [
     { view: VIEWS.ALLOCATION, label: "Manage Allocations" },
     { view: VIEWS.SERVICE,    label: "Manage Services"    },
+    { view: VIEWS.ACTIONS,    label: "Admin Action Center" },
 ];
 
 const CARD_TITLES = {
     [VIEWS.ALLOCATION]: "Allocation Management",
     [VIEWS.SERVICE]:    "Service Management",
+    [VIEWS.ACTIONS]:    "Admin Action Center",
 };
 
 const InfoRow = ({ label, value = "—" }) => (
@@ -178,6 +182,7 @@ const AdminDashboard = ({ username, onLogout }) => {
         switch (activeView) {
             case VIEWS.ALLOCATION: return <AdminAllocationCard hallId={hallInfo?.hall_id} />;
             case VIEWS.SERVICE:    return <AdminServiceCard    hallId={hallInfo?.hall_id} />;
+            case VIEWS.ACTIONS:    return <AdminActionCenter   hallId={hallInfo?.hall_id} />;
             default:               return null;
         }
     };

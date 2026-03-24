@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const asyncWrapper = require("../asyncWrapper");
 
 // GET /sysadmin/halls
@@ -58,6 +59,60 @@ router.post("/add-room", asyncWrapper(async (req, res) => {
 router.post("/semester-rollover", asyncWrapper(async (req, res) => {
     await pool.query(`CALL semester_rollover()`);
     res.json({ message: "Semester rollover completed successfully." });
+}));
+
+// POST /sysadmin/add-student
+router.post("/add-student", asyncWrapper(async (req, res) => {
+    const { nid, name, phone_number, department } = req.body;
+
+    if (!nid || !name || !phone_number || !department) {
+        return res.status(400).json({ message: "NID, name, phone number, and department are required." });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const personResult = await client.query(
+            `INSERT INTO person (nid, name, phone_number)
+             VALUES ($1, $2, $3)
+             RETURNING person_id`,
+            [nid.trim(), name.trim(), phone_number.trim()]
+        );
+
+        const personId = personResult.rows[0].person_id;
+
+        const studentResult = await client.query(
+            `INSERT INTO student (semester, department, person_id)
+             VALUES (1, $1, $2)
+             RETURNING student_id`,
+            [department.trim(), personId]
+        );
+
+        const studentId = studentResult.rows[0].student_id;
+        const tempPassword = crypto.randomBytes(6).toString("base64url").slice(0, 8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        await client.query(
+            `INSERT INTO student_auth (student_id, password)
+
+            VALUES ($1, $2)`,
+            [studentId, hashedPassword]
+        );
+
+        await client.query("COMMIT");
+
+        res.status(201).json({
+            message: "Student added successfully.",
+            student_id: studentId,
+            temp_password: tempPassword,
+        });
+    } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+    } finally {
+        client.release();
+    }
 }));
 
 module.exports = router;

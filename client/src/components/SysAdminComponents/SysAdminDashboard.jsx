@@ -4,23 +4,27 @@ import Header from "../Header";
 import AddHallCard from "./AddHallCard";
 import AddRoomCard from "./AddRoomCard";
 import SemesterRolloverCard from "./SemesterRolloverCard";
+import AddStudentCard from "./AddStudentCard";
 
 const VIEWS = {
     NONE:     "NONE",
     ADD_HALL: "ADD_HALL",
     ADD_ROOM: "ADD_ROOM",
+    ADD_STUDENT: "ADD_STUDENT",
     ROLLOVER: "ROLLOVER",
 };
 
 const PANEL_CARDS = [
     { view: VIEWS.ADD_HALL, label: "Add New Hall"      },
     { view: VIEWS.ADD_ROOM, label: "Add New Room"      },
+    { view: VIEWS.ADD_STUDENT, label: "Add New Student" },
     { view: VIEWS.ROLLOVER, label: "Semester Rollover" },
 ];
 
 const CARD_TITLES = {
     [VIEWS.ADD_HALL]: "Add New Hall",
     [VIEWS.ADD_ROOM]: "Add New Room",
+    [VIEWS.ADD_STUDENT]: "Add New Student",
     [VIEWS.ROLLOVER]: "Semester Rollover",
 };
 
@@ -35,6 +39,7 @@ const SysAdminDashboard = ({ onLogout }) => {
         switch (activeView) {
             case VIEWS.ADD_HALL: return <AddHallCard />;
             case VIEWS.ADD_ROOM: return <AddRoomCard />;
+            case VIEWS.ADD_STUDENT: return <AddStudentCard />;
             case VIEWS.ROLLOVER: return <SemesterRolloverCard />;
             default:             return null;
         }

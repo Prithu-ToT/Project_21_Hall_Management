@@ -4,7 +4,7 @@
 // Inserts bcrypt-hashed passwords for all students and halls.
 //
 // Student passwords : pass1 .. pass15   (login with student_id 1..15)
-// Hall passwords    : th@123 | auh@123 | swh@123
+// Hall passwords    : th1 | auh2 | swh3
 // temp_password     : same plain-text value — this is what you hand to the student
 // =====================================================
 
