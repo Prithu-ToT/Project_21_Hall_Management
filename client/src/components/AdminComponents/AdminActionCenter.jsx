@@ -25,6 +25,8 @@ const AdminActionCenter = ({ hallId }) => {
     const [deleteError, setDeleteError] = useState(null);
     const [deleteSuccess, setDeleteSuccess] = useState(null);
 
+    const [showHistory, setShowHistory] = useState(false);
+
     useEffect(() => {
         const loadRooms = async () => {
             if (!hallId) return;
@@ -164,7 +166,20 @@ const AdminActionCenter = ({ hallId }) => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            <section>
+
+            <Button
+                variant={showHistory ? "primary" : "outline-primary"}
+                onClick={() => setShowHistory(prev => !prev)}
+                style={{ marginBottom: "1rem" }}
+            >
+                {showHistory ? "Hide Allocation History" : "Show Allocation History"}
+            </Button>
+
+            {showHistory && (
+                <>
+                    <section>
+                        <h3 style={styles.sectionTitle}>Search history by student</h3>
+                        <section>
                 <h3 style={styles.sectionTitle}>Search history by student</h3>
                 <div style={styles.row}>
                     <input
@@ -205,7 +220,11 @@ const AdminActionCenter = ({ hallId }) => {
                     </div>
                 )}
             </section>
+                    </section>
 
+                    <section>
+                        <h3 style={styles.sectionTitle}>Search history by room</h3>
+                        
             <section>
                 <h3 style={styles.sectionTitle}>Search history by room</h3>
                 {roomsLoading && <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading rooms...</p>}
@@ -282,7 +301,6 @@ const AdminActionCenter = ({ hallId }) => {
                     </div>
                 )}
             </section>
-
             <section style={styles.deleteSection}>
                 <h3 style={styles.sectionTitle}>Delete history</h3>
                 <p style={styles.hint}>Delete all entries with `start_date` before selected date.</p>
@@ -301,6 +319,10 @@ const AdminActionCenter = ({ hallId }) => {
                 {deleteError && <p style={{ color: "var(--danger)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{deleteError}</p>}
                 {deleteSuccess && <p style={{ color: "var(--success)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{deleteSuccess}</p>}
             </section>
+                    </section>
+                </>
+            )}
+
         </div>
     );
 };
