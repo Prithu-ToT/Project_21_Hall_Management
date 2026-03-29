@@ -47,6 +47,7 @@ EXECUTE FUNCTION enforce_room_capasity();
 -- auto inserts booking of the current room
 -------------------------------------------
 
+
 CREATE OR REPLACE FUNCTION activate_allocation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -56,24 +57,31 @@ DECLARE
   v_paid_fees NUMERIC(10,2);
   v_student_id BIGINT;
   v_room_id INT;
+  v_room_fee NUMERIC(10,2);
 BEGIN
+  
+  SELECT student_id, room_id
+  INTO v_student_id, v_room_id
+  FROM hall_allocation
+  WHERE allocation_id = NEW.allocation_id;
+
   SELECT SUM(amount) INTO v_paid_fees
   FROM seat_fee_payment
   WHERE allocation_id = NEW.allocation_id;
 
-  IF v_paid_fees >= NEW.amount THEN
-    UPDATE hall_allocation ha
-    SET status = 'ACTIVE'
-    WHERE ha.allocation_id = NEW.allocation_id;
+  SELECT seat_fee INTO v_room_fee        
+  FROM hall
+  WHERE hall_id = hall_of_room(v_room_id);
 
-    SELECT student_id, room_id
-    INTO v_student_id, v_room_id
-    FROM hall_allocation
+  IF v_paid_fees >= v_room_fee THEN
+    UPDATE hall_allocation
+    SET status = 'ACTIVE'
     WHERE allocation_id = NEW.allocation_id;
 
     INSERT INTO room_booking (student_id, room_id)
     VALUES (v_student_id, v_room_id);
   END IF;
+
   RETURN NEW;
 END;
 $$;

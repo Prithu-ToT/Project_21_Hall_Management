@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useEffectEvent } from "react";
 import Button from "../Button";
 import Header from "../Header";
 import TextInput from "../TextInput";
@@ -62,24 +62,28 @@ const AdminDashboard = ({ username, onLogout }) => {
     const [seatFeeError, setSeatFeeError]         = useState(null);
     const [seatFeeSuccess, setSeatFeeSuccess]     = useState(false);
 
+    const refetchHallInfo = useEffectEvent(async () => {
+        if (!username) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(
+                BackendServer + `admin/hall-info/${encodeURIComponent(username)}`
+            );
+            if (!response.ok) throw new Error("Failed to fetch hall info");
+            const data = await response.json();
+            setHallInfo(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    });
+
     useEffect(() => {
-        const fetchHallInfo = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const response = await fetch(
-                    BackendServer + `admin/hall-info/${encodeURIComponent(username)}`
-                );
-                if (!response.ok) throw new Error("Failed to fetch hall info");
-                const data = await response.json();
-                setHallInfo(data);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (username) fetchHallInfo();
+        if (username) {
+            refetchHallInfo();
+        }
     }, [username]);
 
     const handleViewToggle = (view) => {
@@ -180,7 +184,12 @@ const AdminDashboard = ({ username, onLogout }) => {
 
     const renderActiveCard = () => {
         switch (activeView) {
-            case VIEWS.ALLOCATION: return <AdminAllocationCard hallId={hallInfo?.hall_id} />;
+            case VIEWS.ALLOCATION: return (
+                <AdminAllocationCard
+                    hallId={hallInfo?.hall_id}
+                    onAllocationChanged={refetchHallInfo}
+                />
+            );
             case VIEWS.SERVICE:    return <AdminServiceCard    hallId={hallInfo?.hall_id} />;
             case VIEWS.ACTIONS:    return <AdminActionCenter   hallId={hallInfo?.hall_id} />;
             default:               return null;

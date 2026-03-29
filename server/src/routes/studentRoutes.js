@@ -47,6 +47,42 @@ router.get("/allocation/:id", asyncWrapper(async (req, res) => {
     res.json({ ...restOfAlloc, ...room_info });
 }));
 
+// GET /student/seat-fee-due/:allocationId
+router.get("/seat-fee-due/:allocationId", asyncWrapper(async (req, res) => {
+    const id = req.params.allocationId;
+
+    const seatFeeResult = await pool.query(
+        `SELECT h.seat_fee
+         FROM hall_allocation ha
+         JOIN room r ON ha.room_id = r.room_id
+         JOIN hall h ON r.hall_id = h.hall_id
+         WHERE ha.allocation_id = $1`,
+        [id]
+    );
+
+    if (seatFeeResult.rows.length === 0) {
+        return res.status(404).json({ message: "Allocation not found" });
+    }
+
+    const seat_fee = parseFloat(seatFeeResult.rows[0].seat_fee);
+
+    const paidResult = await pool.query(
+        `SELECT COALESCE(SUM(amount), 0) AS paid_amount
+         FROM seat_fee_payment
+         WHERE allocation_id = $1`,
+        [id]
+    );
+
+    const paid_amount = parseFloat(paidResult.rows[0].paid_amount);
+
+    res.json({
+        allocation_id: parseInt(id),
+        seat_fee,
+        paid_amount,
+        due_amount: seat_fee - paid_amount,
+    });
+}));
+
 // POST /student/pay-seat-fee
 router.post("/pay-seat-fee", asyncWrapper(async (req, res) => {
     const { allocation_id, bank_transaction_id, amount } = req.body;

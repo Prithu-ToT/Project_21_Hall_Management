@@ -3,8 +3,6 @@ const router = express.Router();
 const pool = require("../db");
 const asyncWrapper = require("../asyncWrapper");
 
-// Mounted at /admin/allocation — see app.js
-
 // GET /admin/allocation/rooms/:hallId
 router.get("/rooms/:hallId", asyncWrapper(async (req, res) => {
     const { hallId } = req.params;

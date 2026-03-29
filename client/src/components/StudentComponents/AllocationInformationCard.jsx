@@ -38,6 +38,12 @@ export default function AllocationInformationCard({ username }) {
     const [amount, setAmount] = useState("");
     const [paying, setPaying] = useState(false);
     const [payError, setPayError] = useState(null);
+    const [dueAmount, setDueAmount] = useState(null);
+
+    const formatAmount = (value) => {
+        const numeric = Number(value);
+        return Number.isFinite(numeric) ? numeric.toLocaleString() : value;
+    };
 
     const fetchAllocation = async () => {
         setLoading(true);
@@ -57,6 +63,26 @@ export default function AllocationInformationCard({ username }) {
     useEffect(() => {
         if (username) fetchAllocation();
     }, [username]);
+
+    useEffect(() => {
+        const fetchDueAmount = async () => {
+            if (!allocation?.allocation_id) return;
+            try {
+                const res = await fetch(
+                    BackendServer + `student/seat-fee-due/${allocation.allocation_id}`
+                );
+                if (!res.ok) throw new Error("Failed to fetch due amount");
+                const data = await res.json();
+                setDueAmount(data?.due_amount ?? null);
+            } catch {
+                setDueAmount(null);
+            }
+        };
+
+        if (showPayForm) {
+            fetchDueAmount();
+        }
+    }, [showPayForm, allocation?.allocation_id]);
 
     const handlePaySubmit = async () => {
         if (!txnId.trim() || !amount) {
@@ -96,6 +122,7 @@ export default function AllocationInformationCard({ username }) {
         setAmount("");
         setTxnId("");
         setPayError(null);
+        setDueAmount(null);
     };
 
     if (loading) return (
@@ -120,7 +147,11 @@ export default function AllocationInformationCard({ username }) {
                 <input
                     type="number"
                     className="form-control"
-                    placeholder="Amount (e.g. 5000)"
+                    placeholder={
+                        dueAmount != null
+                            ? `Amount (due ${formatAmount(dueAmount)})`
+                            : "Amount (e.g. 5000)"
+                    }
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     style={{ marginBottom: "0.75rem" }}

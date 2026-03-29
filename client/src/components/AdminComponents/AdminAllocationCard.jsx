@@ -31,7 +31,7 @@ const StatusBadge = ({ status }) => {
  *   GET    /admin/allocation/student-location/:hallId/:studentId
  * Student profile: GET /student/basic/:id
  */
-const AdminAllocationCard = ({ hallId }) => {
+const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
     const [rooms, setRooms] = useState([]);
     const [roomsLoading, setRoomsLoading] = useState(false);
     const [roomsError, setRoomsError] = useState(null);
@@ -145,6 +145,7 @@ const AdminAllocationCard = ({ hallId }) => {
             if (!res.ok) throw new Error(data.message || "Delete failed");
             setConfirmDeleteId(null);
             if (selectedRoom) await loadAllocationsForRoom(selectedRoom);
+            if (onAllocationChanged) await onAllocationChanged();
         } catch (e) {
             setAllocError(e.message);
         } finally {
@@ -178,6 +179,7 @@ const AdminAllocationCard = ({ hallId }) => {
             setShowAddModal(false);
             setNewStudentId("");
             await loadAllocationsForRoom(selectedRoom);
+            if (onAllocationChanged) await onAllocationChanged();
         } catch {
             setAddError("Network error. Try again.");
         } finally {
