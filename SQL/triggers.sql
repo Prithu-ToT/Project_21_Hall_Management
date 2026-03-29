@@ -48,22 +48,28 @@ EXECUTE FUNCTION enforce_room_capasity();
 -------------------------------------------
 
 
+
 CREATE OR REPLACE FUNCTION activate_allocation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
-
 DECLARE
   v_paid_fees NUMERIC(10,2);
   v_student_id BIGINT;
   v_room_id INT;
   v_room_fee NUMERIC(10,2);
+  v_current_status alloc_status;
 BEGIN
   
-  SELECT student_id, room_id
-  INTO v_student_id, v_room_id
+  SELECT student_id, room_id, status
+  INTO v_student_id, v_room_id, v_current_status
   FROM hall_allocation
   WHERE allocation_id = NEW.allocation_id;
+
+  -- reject payment when active
+  IF v_current_status = 'ACTIVE' THEN
+    RETURN NEW;
+  END IF;
 
   SELECT SUM(amount) INTO v_paid_fees
   FROM seat_fee_payment
