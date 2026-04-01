@@ -22,6 +22,7 @@ AS $$
   WHERE rm.room_id = $1;
 $$;
 
+
 --SELECT get_room_info(2);  -- returns {hall_name : "TH", room_number : 102}
 
 -- real world logic to DB logic for hall and room
