@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "../Button";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 
 const SemesterRolloverCard = () => {
     const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ const SemesterRolloverCard = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(BackendServer + "sysadmin/semester-rollover", {
+            const response = await authFetch(BackendServer + "sysadmin/semester-rollover", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
             });

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import Button from "../Button";
 import TextInput from "../TextInput";
 
@@ -64,7 +65,7 @@ const AdminServiceCard = ({ hallId }) => {
         setNamesLoading(true);
         setNamesError(null);
         try {
-            const res = await fetch(BackendServer + `admin/service/names/${hallId}`);
+            const res = await authFetch(BackendServer + `admin/service/names/${hallId}`);
             if (!res.ok) throw new Error("Failed to load service names");
             const data = await res.json();
             setServiceNames(data);
@@ -93,7 +94,7 @@ const AdminServiceCard = ({ hallId }) => {
         setByNameError(null);
         setServicesByName([]);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/service/by-name/${hallId}?name=${encodeURIComponent(name)}`
             );
             if (!res.ok) throw new Error("Failed to load services");
@@ -123,7 +124,7 @@ const AdminServiceCard = ({ hallId }) => {
         setLookupError(null);
         setServicesByStudent([]);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/service/by-student/${hallId}/${encodeURIComponent(sid)}`
             );
             if (!res.ok) {
@@ -164,7 +165,7 @@ const AdminServiceCard = ({ hallId }) => {
         setAdding(true);
         setAddError(null);
         try {
-            const res = await fetch(BackendServer + "admin/service", {
+            const res = await authFetch(BackendServer + "admin/service", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -201,7 +202,7 @@ const AdminServiceCard = ({ hallId }) => {
         setAddForAllLoading(true);
         setAddError(null);
         try {
-            const res = await fetch(BackendServer + "admin/service/add-for-all", {
+            const res = await authFetch(BackendServer + "admin/service/add-for-all", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

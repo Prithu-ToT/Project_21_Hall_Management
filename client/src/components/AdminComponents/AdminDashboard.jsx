@@ -3,6 +3,7 @@ import Button from "../Button";
 import Header from "../Header";
 import TextInput from "../TextInput";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import AdminAllocationCard from "./AdminAllocationCard";
 import AdminServiceCard from "./AdminServiceCard";
 import AdminActionCenter from "./AdminActionCenter";
@@ -67,7 +68,7 @@ const AdminDashboard = ({ username, onLogout }) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(
+            const response = await authFetch(
                 BackendServer + `admin/hall-info/${encodeURIComponent(username)}`
             );
             if (!response.ok) throw new Error("Failed to fetch hall info");
@@ -110,7 +111,7 @@ const AdminDashboard = ({ username, onLogout }) => {
 
         setPwLoading(true);
         try {
-            const response = await fetch(BackendServer + "admin/change-password", {
+            const response = await authFetch(BackendServer + "admin/change-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -156,7 +157,7 @@ const AdminDashboard = ({ username, onLogout }) => {
 
         setSeatFeeLoading(true);
         try {
-            const response = await fetch(BackendServer + "admin/seat-fee", {
+            const response = await authFetch(BackendServer + "admin/seat-fee", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

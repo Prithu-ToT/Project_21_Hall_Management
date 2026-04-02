@@ -2,6 +2,7 @@ import { useState } from "react";
 import Button from "../Button";
 import TextInput from "../TextInput";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 
 const AddHallCard = () => {
     const [hallName, setHallName] = useState("");
@@ -21,7 +22,7 @@ const AddHallCard = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(BackendServer + "sysadmin/add-hall", {
+            const response = await authFetch(BackendServer + "sysadmin/add-hall", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

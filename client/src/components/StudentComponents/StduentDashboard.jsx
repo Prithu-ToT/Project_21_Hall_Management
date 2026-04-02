@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Button from "../Button";
 import Header from "../Header";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import AllocationInformationCard from "./AllocationInformationCard";
 import ServiceInformationCard from "./ServiceInformationCard";
 import BookingInformationCard from "./BookingInformationCard";
@@ -52,7 +53,7 @@ const StudentDashboard = ({ username, onLogout }) => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(BackendServer + `student/basic/${username}`);
+                const response = await authFetch(BackendServer + `student/basic/${username}`);
                 if (!response.ok) throw new Error("Failed to fetch student info");
                 const data = await response.json();
                 setStudentInfo(data);
@@ -84,7 +85,7 @@ const StudentDashboard = ({ username, onLogout }) => {
         setPwSuccess(false);
 
         try {
-            const res = await fetch(BackendServer + "student/change-password", {
+            const res = await authFetch(BackendServer + "student/change-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

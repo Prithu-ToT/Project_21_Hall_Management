@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import Button from "../Button";
 
 const statusColor = (status) => {
@@ -55,7 +56,7 @@ export default function BookingInformationCard({ username }) {
         try {
             // BACKEND: GET /student/bookings/:studentId
             // Returns: [{ booking_id, hall_name, room_number, status, created_at }]
-            const res = await fetch(BackendServer + `student/bookings/${username}`);
+            const res = await authFetch(BackendServer + `student/bookings/${username}`);
             if (!res.ok) throw new Error("Failed to fetch bookings");
             const data = await res.json();
             setBookings(data);
@@ -71,7 +72,7 @@ export default function BookingInformationCard({ username }) {
         try {
             // BACKEND: GET /student/halls
             // Returns: [{ hall_id, hall_name }]
-            const res = await fetch(BackendServer + "student/halls");
+            const res = await authFetch(BackendServer + "student/halls");
             if (!res.ok) throw new Error("Failed to fetch halls");
             const data = await res.json();
             setHalls(data);
@@ -90,7 +91,7 @@ export default function BookingInformationCard({ username }) {
         try {
             // BACKEND: DELETE /student/bookings/:bookingId
             // Returns: 200 { message: "Booking deleted" }
-            const res = await fetch(BackendServer + `student/bookings/${confirmDeleteId}`, {
+            const res = await authFetch(BackendServer + `student/bookings/${confirmDeleteId}`, {
                 method: "DELETE",
             });
             if (!res.ok) throw new Error("Failed to delete booking");
@@ -137,7 +138,7 @@ export default function BookingInformationCard({ username }) {
             // Body:    { student_id, hall_id, room_number }
             // Returns: 201 { message: "Booking created" }
             //          400 { message: "Room not found" } or similar
-            const res = await fetch(BackendServer + "student/bookings", {
+            const res = await authFetch(BackendServer + "student/bookings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

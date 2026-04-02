@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import Button from "../Button";
 
 const InfoRow = ({ label, value = "—" }) => (
@@ -49,7 +50,7 @@ export default function AllocationInformationCard({ username }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(BackendServer + `student/allocation/${username}`);
+            const res = await authFetch(BackendServer + `student/allocation/${username}`);
             if (!res.ok) throw new Error("Failed to fetch allocation info");
             const data = await res.json();
             setAllocation(data);         // null if student has no allocation
@@ -68,7 +69,7 @@ export default function AllocationInformationCard({ username }) {
         const fetchDueAmount = async () => {
             if (!allocation?.allocation_id) return;
             try {
-                const res = await fetch(
+                const res = await authFetch(
                     BackendServer + `student/seat-fee-due/${allocation.allocation_id}`
                 );
                 if (!res.ok) throw new Error("Failed to fetch due amount");
@@ -92,7 +93,7 @@ export default function AllocationInformationCard({ username }) {
         setPaying(true);
         setPayError(null);
         try {
-            const res = await fetch(BackendServer + "student/pay-seat-fee", {
+            const res = await authFetch(BackendServer + "student/pay-seat-fee", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

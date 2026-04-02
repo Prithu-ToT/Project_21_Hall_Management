@@ -2,6 +2,7 @@ import { useState } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
 import { BackendServer } from "../App";
+import { authFetch } from "../authFetch";
 
 export default function LoginForm({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -29,7 +30,7 @@ export default function LoginForm({ onLogin }) {
     const userInput = { username, password, role };
 
     try {
-      const response = await fetch(BackendServer + "login", {
+      const response = await authFetch(BackendServer + "login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userInput),
@@ -45,8 +46,8 @@ export default function LoginForm({ onLogin }) {
 
       onLogin({
         username: userInput.username,
-        // Backend returns the resolved role (distinguishes sysadmin from admin)
-        role: confirmation.role ?? userInput.role,
+        role:     confirmation.role ?? userInput.role,
+        token:    confirmation.token,
       });
 
     } catch (error) {

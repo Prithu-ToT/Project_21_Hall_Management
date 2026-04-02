@@ -2,6 +2,7 @@ import { useState } from "react";
 import Button from "../Button";
 import TextInput from "../TextInput";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 
 const AddStudentCard = () => {
     const [nid, setNid] = useState("");
@@ -23,7 +24,7 @@ const AddStudentCard = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(BackendServer + "sysadmin/add-student", {
+            const response = await authFetch(BackendServer + "sysadmin/add-student", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

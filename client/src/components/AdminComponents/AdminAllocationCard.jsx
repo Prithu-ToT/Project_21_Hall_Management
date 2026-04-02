@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import Button from "../Button";
 import TextInput from "../TextInput";
 
@@ -64,7 +65,7 @@ const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
         setRoomsLoading(true);
         setRoomsError(null);
         try {
-            const res = await fetch(BackendServer + `admin/allocation/rooms/${hallId}`);
+            const res = await authFetch(BackendServer + `admin/allocation/rooms/${hallId}`);
             if (!res.ok) throw new Error("Failed to load rooms");
             const data = await res.json();
             setRooms(data);
@@ -88,7 +89,7 @@ const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
     }, [rooms, roomSearch]);
 
     const fetchBasicForStudent = async (studentId) => {
-        const res = await fetch(BackendServer + `student/basic/${studentId}`);
+        const res = await authFetch(BackendServer + `student/basic/${studentId}`);
         if (!res.ok) return null;
         return res.json();
     };
@@ -99,7 +100,7 @@ const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
         setAllocError(null);
         setAllocRows([]);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/allocation/room-allocations/${hallId}/${room.room_id}`
             );
             if (!res.ok) throw new Error("Failed to load allocations");
@@ -137,7 +138,7 @@ const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
         if (!confirmDeleteId || !hallId) return;
         setDeleting(true);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/allocation/allocations/${hallId}/${confirmDeleteId}`,
                 { method: "DELETE" }
             );
@@ -162,7 +163,7 @@ const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
         setAdding(true);
         setAddError(null);
         try {
-            const res = await fetch(BackendServer + "admin/allocation/allocations", {
+            const res = await authFetch(BackendServer + "admin/allocation/allocations", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -197,7 +198,7 @@ const AdminAllocationCard = ({ hallId, onAllocationChanged }) => {
         setLookupError(null);
         setLookupResult(null);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/allocation/student-location/${hallId}/${encodeURIComponent(sid)}`
             );
             const data = await res.json();

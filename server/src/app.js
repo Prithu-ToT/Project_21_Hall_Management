@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
@@ -7,8 +8,8 @@ const studentServiceRoutes = require("./routes/studentServiceRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminAllocationRoutes = require("./routes/adminAllocationRoutes");
 const adminServiceRoutes = require("./routes/adminServiceRoutes");
-const sysAdminRoutes = require("./routes/sysAdminRoutes");
-
+const sysAdminRoutes = require("./routes/sysAdminRoutes");  
+const { requireAuth, requireRole } = require("./authMiddleware");
 const app = express();
 
 app.use(cors());
@@ -20,20 +21,27 @@ app.use((req, res, next) => {
     next();
 });
 // Routes
-app.use("/", authRoutes);
-app.use("/student", studentRoutes);
-app.use("/student/bookings", studentBookingRoutes);
-app.use("/student/services", studentServiceRoutes);
+app.use("/", authRoutes);   // this creates the token
 
-app.use("/admin", adminRoutes);
-app.use("/admin/allocation", adminAllocationRoutes);
-app.use("/admin/service", adminServiceRoutes);
-app.use("/sysadmin", sysAdminRoutes);
+// token needs verification for the later endpoints
+app.use(requireAuth);
+
+app.use("/student", requireRole("student"), studentRoutes);
+app.use("/student/bookings", requireRole("student"), studentBookingRoutes);
+app.use("/student/services", requireRole("student"), studentServiceRoutes);
+
+app.use("/admin", requireRole("admin"), adminRoutes);
+app.use("/admin/allocation", requireRole("admin"), adminAllocationRoutes);
+app.use("/admin/service", requireRole("admin"), adminServiceRoutes);
+
+app.use("/sysadmin", requireRole("sysadmin"), sysAdminRoutes);
 
 // Error handling middleware — must be at the bottom
 app.use((err, req, res, next) => {
     const status = err.status || 500;
     let message = err.message || "Internal server error";
+
+    console.log(`Error happened : Code=${err.code} Msg=${err.message}`);
 
     switch (err.code) {
         case "23505":

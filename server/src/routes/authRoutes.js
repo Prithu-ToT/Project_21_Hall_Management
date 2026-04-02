@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const asyncWrapper = require("../asyncWrapper");
+const { JWT_SECRET } = require("../authMiddleware");
 
 router.post("/login", asyncWrapper(async (req, res) => {
     const { username, password, role } = req.body;
@@ -14,7 +16,7 @@ router.post("/login", asyncWrapper(async (req, res) => {
         values = [username];
     } else if (role === "admin") {
         query = `
-            SELECT password FROM hall_auth ha
+            SELECT ha.password, h.hall_id FROM hall_auth ha
             JOIN hall h ON ha.hall_id = h.hall_id
             WHERE LOWER(h.hall_name) = LOWER($1)
         `;
@@ -29,10 +31,8 @@ router.post("/login", asyncWrapper(async (req, res) => {
         return res.status(404).json({ message: "Username not found" });
     }
 
-    const storedPassword = result.rows[0].password;
-
-    let passwordMatch;
-    passwordMatch = await bcrypt.compare(password, storedPassword);
+    const { password: storedPassword, hall_id } = result.rows[0];
+    const passwordMatch = await bcrypt.compare(password, storedPassword);
 
     if (!passwordMatch) {
         return res.status(401).json({ message: "Wrong password" });
@@ -42,7 +42,18 @@ router.post("/login", asyncWrapper(async (req, res) => {
         ? "sysadmin"
         : role;
 
-    res.json({ message: "Login successful", role: resolvedRole });
+    // Build payload based on role
+    // hall_id embedded here means admin routes no longer trust client-sent hallId
+    const payload =
+        resolvedRole === "student"  ? { sub: username,    role: "student"  } :
+        resolvedRole === "admin"    ? { sub: username,    role: "admin",    hallId: hall_id } :
+        /* sysadmin */                { sub: "sysadmin",  role: "sysadmin" };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "8h" });
+
+    res.json({ message: "Login successful", role: resolvedRole, token });
 }));
 
 module.exports = router;
+
+// Pera hoilo amdr tocken je kew curi korte pare, we need to implement refresh token to prevent that, jeta korar tel amar ar nai  

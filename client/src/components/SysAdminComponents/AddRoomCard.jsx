@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Button from "../Button";
 import TextInput from "../TextInput";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 
 const AddRoomCard = () => {
     const [halls,       setHalls]       = useState([]);
@@ -16,7 +17,7 @@ const AddRoomCard = () => {
     useEffect(() => {
         const fetchHalls = async () => {
             try {
-                const res = await fetch(BackendServer + "sysadmin/halls");
+                const res = await authFetch(BackendServer + "sysadmin/halls");
                 if (!res.ok) throw new Error("Failed to load halls.");
                 const data = await res.json();
                 setHalls(data);
@@ -46,7 +47,7 @@ const AddRoomCard = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(BackendServer + "sysadmin/add-room", {
+            const response = await authFetch(BackendServer + "sysadmin/add-room", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

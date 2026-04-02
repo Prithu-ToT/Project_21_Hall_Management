@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import Button from "../Button";
 
 const AdminActionCenter = ({ hallId }) => {
@@ -33,7 +34,7 @@ const AdminActionCenter = ({ hallId }) => {
             setRoomsLoading(true);
             setRoomsError(null);
             try {
-                const res = await fetch(BackendServer + `admin/allocation/rooms/${hallId}`);
+                const res = await authFetch(BackendServer + `admin/allocation/rooms/${hallId}`);
                 if (!res.ok) throw new Error("Failed to load rooms");
                 const data = await res.json();
                 setRooms(data);
@@ -53,7 +54,7 @@ const AdminActionCenter = ({ hallId }) => {
     }, [rooms, roomSearch]);
 
     const fetchBasicForStudent = async (studentId) => {
-        const res = await fetch(BackendServer + `student/basic/${studentId}`);
+        const res = await authFetch(BackendServer + `student/basic/${studentId}`);
         if (!res.ok) return null;
         return res.json();
     };
@@ -64,7 +65,7 @@ const AdminActionCenter = ({ hallId }) => {
         setHistoryError(null);
         setHistoryRows([]);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/allocation/history-room/${hallId}/${room.room_id}`
             );
             if (!res.ok) throw new Error("Failed to load allocation history");
@@ -104,7 +105,7 @@ const AdminActionCenter = ({ hallId }) => {
         setLookupError(null);
         setStudentHistoryRows([]);
         try {
-            const res = await fetch(
+            const res = await authFetch(
                 BackendServer + `admin/allocation/history-student/${hallId}/${encodeURIComponent(sid)}`
             );
             const data = await res.json();
@@ -135,7 +136,7 @@ const AdminActionCenter = ({ hallId }) => {
 
         setDeleteLoading(true);
         try {
-            const response = await fetch(BackendServer + `admin/allocation/history-before/${hallId}`, {
+            const response = await authFetch(BackendServer + `admin/allocation/history-before/${hallId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ beforeDate }),

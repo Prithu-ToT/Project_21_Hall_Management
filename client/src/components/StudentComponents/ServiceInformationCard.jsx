@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { BackendServer } from "../../App";
+import { authFetch } from "../../authFetch";
 import Button from "../Button";
 
 const PaidBadge = ({ paid }) => {
@@ -37,7 +38,7 @@ export default function ServiceInformationCard({ username }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(BackendServer + `student/services/${username}`);
+            const res = await authFetch(BackendServer + `student/services/${username}`);
             if (!res.ok) throw new Error("Failed to fetch services");
             const data = await res.json();
             setServices(data);
@@ -74,7 +75,7 @@ export default function ServiceInformationCard({ username }) {
         setPaying(true);
         setPayError(null);
         try {
-            const res = await fetch(BackendServer + "student/services/pay", {
+            const res = await authFetch(BackendServer + "student/services/pay", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
