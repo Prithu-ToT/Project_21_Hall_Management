@@ -18,7 +18,16 @@ DECLARE
     v_paid_fees NUMERIC(10,2);
     v_service_fee_amount NUMERIC(10,2);
 BEGIN
-    SELECT SUM(amount_paid) INTO v_paid_fees
+    SELECT COALESCE(
+        SUM(
+            CASE
+                WHEN direction = 'STUDENT_TO_HALL' THEN amount_paid
+                WHEN direction = 'HALL_TO_STUDENT' THEN -amount_paid
+                ELSE 0
+            END
+        ),
+        0
+    ) INTO v_paid_fees
     FROM resident_service_payment
     WHERE service_id = NEW.service_id;
 
@@ -58,3 +67,15 @@ BEGIN
     WHERE r.hall_id = p_hall_id;
 END;
 $$;
+
+CREATE TYPE payment_direction AS ENUM (
+    'STUDENT_TO_HALL',
+    'HALL_TO_STUDENT'
+);
+
+ALTER TABLE "resident_service_payment"
+ADD COLUMN "direction" payment_direction DEFAULT 'STUDENT_TO_HALL' NOT NULL;
+
+
+ALTER TABLE "seat_fee_payment"
+ADD COLUMN "direction" payment_direction DEFAULT 'STUDENT_TO_HALL' NOT NULL;

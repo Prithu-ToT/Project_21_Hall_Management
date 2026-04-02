@@ -44,9 +44,8 @@ EXECUTE FUNCTION enforce_room_capasity();
 
 -------------------------------------------
 -- trigger for activating room after payment 
--- auto inserts booking of the current room
+-- auto inserts allocation of the current room
 -------------------------------------------
-
 
 
 CREATE OR REPLACE FUNCTION activate_allocation()
@@ -71,7 +70,17 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  SELECT SUM(amount) INTO v_paid_fees
+  SELECT COALESCE(
+    SUM(
+      CASE
+        WHEN direction = 'STUDENT_TO_HALL' THEN amount
+        WHEN direction = 'HALL_TO_STUDENT' THEN -amount
+        ELSE 0
+      END
+    ),
+    0
+  )
+  INTO v_paid_fees
   FROM seat_fee_payment
   WHERE allocation_id = NEW.allocation_id;
 
