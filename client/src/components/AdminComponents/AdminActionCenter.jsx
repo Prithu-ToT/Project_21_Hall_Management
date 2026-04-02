@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BackendServer } from "../../App";
 import { authFetch } from "../../authFetch";
 import Button from "../Button";
+import UnresolvedPaymentsCard from "./UnresolvedPaymentsCard";
 
 const AdminActionCenter = ({ hallId }) => {
     const [rooms, setRooms] = useState([]);
@@ -27,6 +28,7 @@ const AdminActionCenter = ({ hallId }) => {
     const [deleteSuccess, setDeleteSuccess] = useState(null);
 
     const [showHistory, setShowHistory] = useState(false);
+    const [showUnresolved, setShowUnresolved] = useState(false);  // new
 
     useEffect(() => {
         const loadRooms = async () => {
@@ -34,6 +36,7 @@ const AdminActionCenter = ({ hallId }) => {
             setRoomsLoading(true);
             setRoomsError(null);
             try {
+                // fetch all rooms in this hall for the history room search dropdown
                 const res = await authFetch(BackendServer + `admin/allocation/rooms/${hallId}`);
                 if (!res.ok) throw new Error("Failed to load rooms");
                 const data = await res.json();
@@ -65,6 +68,7 @@ const AdminActionCenter = ({ hallId }) => {
         setHistoryError(null);
         setHistoryRows([]);
         try {
+            // fetch allocation history for a specific room
             const res = await authFetch(
                 BackendServer + `admin/allocation/history-room/${hallId}/${room.room_id}`
             );
@@ -73,11 +77,7 @@ const AdminActionCenter = ({ hallId }) => {
             const enriched = await Promise.all(
                 rows.map(async (row) => {
                     const basic = await fetchBasicForStudent(row.student_id);
-                    return {
-                        ...row,
-                        name: basic?.name ?? "—",
-                        department: basic?.department ?? "—",
-                    };
+                    return { ...row, name: basic?.name ?? "—", department: basic?.department ?? "—" };
                 })
             );
             setHistoryRows(enriched);
@@ -97,22 +97,17 @@ const AdminActionCenter = ({ hallId }) => {
 
     const handleStudentHistoryLookup = async () => {
         const sid = studentLookupId.trim();
-        if (!sid || !hallId) {
-            setLookupError("Enter a student ID.");
-            return;
-        }
+        if (!sid || !hallId) { setLookupError("Enter a student ID."); return; }
         setLookupLoading(true);
         setLookupError(null);
         setStudentHistoryRows([]);
         try {
+            // fetch allocation history for a specific student in this hall
             const res = await authFetch(
                 BackendServer + `admin/allocation/history-student/${hallId}/${encodeURIComponent(sid)}`
             );
             const data = await res.json();
-            if (!res.ok) {
-                setLookupError(data.message || "Lookup failed.");
-                return;
-            }
+            if (!res.ok) { setLookupError(data.message || "Lookup failed."); return; }
             setStudentHistoryRows(data);
         } catch {
             setLookupError("Network error.");
@@ -124,18 +119,11 @@ const AdminActionCenter = ({ hallId }) => {
     const handleDeleteHistory = async () => {
         setDeleteError(null);
         setDeleteSuccess(null);
-
-        if (!beforeDate) {
-            setDeleteError("Please select a date.");
-            return;
-        }
-
-        if (!window.confirm(`Delete all history with start_date before ${beforeDate}?`)) {
-            return;
-        }
-
+        if (!beforeDate) { setDeleteError("Please select a date."); return; }
+        if (!window.confirm(`Delete all history with start_date before ${beforeDate}?`)) return;
         setDeleteLoading(true);
         try {
+            // delete allocation history entries older than the selected date
             const response = await authFetch(BackendServer + `admin/allocation/history-before/${hallId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
@@ -146,9 +134,7 @@ const AdminActionCenter = ({ hallId }) => {
                 setDeleteError(data.message || "Failed to delete history.");
             } else {
                 setDeleteSuccess(`Deleted ${data.deleted_count} history row(s).`);
-                if (selectedRoom) {
-                    await loadRoomHistory(selectedRoom);
-                }
+                if (selectedRoom) await loadRoomHistory(selectedRoom);
             }
         } catch {
             setDeleteError("Network error. Please try again.");
@@ -168,127 +154,71 @@ const AdminActionCenter = ({ hallId }) => {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
-            <Button
-                variant={showHistory ? "primary" : "outline-primary"}
-                onClick={() => setShowHistory(prev => !prev)}
-                style={{ marginBottom: "1rem" }}
-            >
-                {showHistory ? "Hide Allocation History" : "Show Allocation History"}
-            </Button>
+            {/* ── Unresolved Payments toggle ── */}
+            <section>
+                <Button
+                    variant={showUnresolved ? "primary" : "outline-primary"}
+                    onClick={() => setShowUnresolved(prev => !prev)}
+                    style={{ width: "100%", marginBottom: showUnresolved ? "1rem" : 0 }}
+                >
+                    {showUnresolved ? "Hide Unresolved Payments" : "Show Unresolved Payments"}
+                </Button>
 
-            {showHistory && (
-                <>
-                    <section>
-                        <h3 style={styles.sectionTitle}>Search history by student</h3>
-                        <section>
-                
-                <div style={styles.row}>
-                    <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Student ID"
-                        value={studentLookupId}
-                        onChange={(e) => setStudentLookupId(e.target.value)}
-                        style={{ flex: 1 }}
-                    />
-                    <Button variant="primary" onClick={handleStudentHistoryLookup} disabled={lookupLoading}>
-                        {lookupLoading ? "Searching..." : "Find history"}
-                    </Button>
-                </div>
-                {lookupError && <p style={{ color: "var(--danger)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{lookupError}</p>}
-                {studentHistoryRows.length > 0 && (
-                    <div style={styles.tableWrap}>
-                        <table style={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th style={styles.th}>History ID</th>
-                                    <th style={styles.th}>Room</th>
-                                    <th style={styles.th}>Start Date</th>
-                                    <th style={styles.th}>End Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {studentHistoryRows.map((row) => (
-                                    <tr key={row.history_id}>
-                                        <td style={styles.td}>{row.history_id}</td>
-                                        <td style={styles.td}>{row.room_number}</td>
-                                        <td style={styles.td}>{row.start_date}</td>
-                                        <td style={styles.td}>{row.end_date}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                {showUnresolved && (
+                    <UnresolvedPaymentsCard hallId={hallId} />
                 )}
             </section>
-                    </section>
 
-                    <section>
-                        <h3 style={styles.sectionTitle}>Search history by room</h3>
-                        
+            {/* ── Allocation History toggle ── */}
             <section>
-                {roomsLoading && <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading rooms...</p>}
-                {roomsError && <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{roomsError}</p>}
-                {!roomsLoading && !roomsError && (
-                    <div style={{ position: "relative" }}>
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search room number..."
-                            value={roomSearch}
-                            onChange={(e) => {
-                                setRoomSearch(e.target.value);
-                                setSelectedRoom(null);
-                                setHistoryRows([]);
-                                setShowRoomDropdown(true);
-                            }}
-                            onFocus={() => setShowRoomDropdown(true)}
-                            onBlur={() => setTimeout(() => setShowRoomDropdown(false), 120)}
-                        />
-                        {showRoomDropdown && filteredRooms.length > 0 && (
-                            <div style={styles.dropdown}>
-                                {filteredRooms.map((r) => (
-                                    <div
-                                        key={r.room_id}
-                                        style={styles.dropdownItem}
-                                        onMouseDown={() => handleSelectRoom(r)}
-                                    >
-                                        Room {r.room_number}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                <Button
+                    variant={showHistory ? "primary" : "outline-primary"}
+                    onClick={() => setShowHistory(prev => !prev)}
+                    style={{ width: "100%", marginBottom: showHistory ? "1rem" : 0 }}
+                >
+                    {showHistory ? "Hide Allocation History" : "Show Allocation History"}
+                </Button>
 
-                {selectedRoom && (
-                    <div style={{ marginTop: "1rem" }}>
-                        <p style={styles.selectedBanner}>Selected room: <strong>{selectedRoom.room_number}</strong></p>
-                        {historyLoading && <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading history...</p>}
-                        {historyError && <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{historyError}</p>}
-                        {!historyLoading && !historyError && (
-                            historyRows.length === 0 ? (
-                                <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>No history found for this room.</p>
-                            ) : (
+                {showHistory && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+                        {/* search by student */}
+                        <section>
+                            <h3 style={styles.sectionTitle}>Search history by student</h3>
+                            <div style={styles.row}>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Student ID"
+                                    value={studentLookupId}
+                                    onChange={(e) => setStudentLookupId(e.target.value)}
+                                    style={{ flex: 1 }}
+                                />
+                                <Button variant="primary" onClick={handleStudentHistoryLookup} disabled={lookupLoading}>
+                                    {lookupLoading ? "Searching…" : "Find history"}
+                                </Button>
+                            </div>
+                            {lookupError && (
+                                <p style={{ color: "var(--danger)", fontSize: "0.85rem", marginTop: "0.5rem" }}>
+                                    {lookupError}
+                                </p>
+                            )}
+                            {studentHistoryRows.length > 0 && (
                                 <div style={styles.tableWrap}>
                                     <table style={styles.table}>
                                         <thead>
                                             <tr>
                                                 <th style={styles.th}>History ID</th>
-                                                <th style={styles.th}>Student ID</th>
-                                                <th style={styles.th}>Name</th>
-                                                <th style={styles.th}>Department</th>
+                                                <th style={styles.th}>Room</th>
                                                 <th style={styles.th}>Start Date</th>
                                                 <th style={styles.th}>End Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {historyRows.map((row) => (
+                                            {studentHistoryRows.map((row) => (
                                                 <tr key={row.history_id}>
                                                     <td style={styles.td}>{row.history_id}</td>
-                                                    <td style={styles.td}>{row.student_id}</td>
-                                                    <td style={styles.td}>{row.name}</td>
-                                                    <td style={styles.td}>{row.department}</td>
+                                                    <td style={styles.td}>{row.room_number}</td>
                                                     <td style={styles.td}>{row.start_date}</td>
                                                     <td style={styles.td}>{row.end_date}</td>
                                                 </tr>
@@ -296,32 +226,122 @@ const AdminActionCenter = ({ hallId }) => {
                                         </tbody>
                                     </table>
                                 </div>
-                            )
-                        )}
+                            )}
+                        </section>
+
+                        {/* search by room */}
+                        <section>
+                            <h3 style={styles.sectionTitle}>Search history by room</h3>
+                            {roomsLoading && (
+                                <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading rooms…</p>
+                            )}
+                            {roomsError && (
+                                <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{roomsError}</p>
+                            )}
+                            {!roomsLoading && !roomsError && (
+                                <div style={{ position: "relative" }}>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="Search room number…"
+                                        value={roomSearch}
+                                        onChange={(e) => {
+                                            setRoomSearch(e.target.value);
+                                            setSelectedRoom(null);
+                                            setHistoryRows([]);
+                                            setShowRoomDropdown(true);
+                                        }}
+                                        onFocus={() => setShowRoomDropdown(true)}
+                                        onBlur={() => setTimeout(() => setShowRoomDropdown(false), 120)}
+                                    />
+                                    {showRoomDropdown && filteredRooms.length > 0 && (
+                                        <div style={styles.dropdown}>
+                                            {filteredRooms.map((r) => (
+                                                <div
+                                                    key={r.room_id}
+                                                    style={styles.dropdownItem}
+                                                    onMouseDown={() => handleSelectRoom(r)}
+                                                >
+                                                    Room {r.room_number}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {selectedRoom && (
+                                <div style={{ marginTop: "1rem" }}>
+                                    <p style={styles.selectedBanner}>
+                                        Selected room: <strong>{selectedRoom.room_number}</strong>
+                                    </p>
+                                    {historyLoading && (
+                                        <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading history…</p>
+                                    )}
+                                    {historyError && (
+                                        <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{historyError}</p>
+                                    )}
+                                    {!historyLoading && !historyError && (
+                                        historyRows.length === 0 ? (
+                                            <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
+                                                No history found for this room.
+                                            </p>
+                                        ) : (
+                                            <div style={styles.tableWrap}>
+                                                <table style={styles.table}>
+                                                    <thead>
+                                                        <tr>
+                                                            <th style={styles.th}>History ID</th>
+                                                            <th style={styles.th}>Student ID</th>
+                                                            <th style={styles.th}>Name</th>
+                                                            <th style={styles.th}>Department</th>
+                                                            <th style={styles.th}>Start Date</th>
+                                                            <th style={styles.th}>End Date</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {historyRows.map((row) => (
+                                                            <tr key={row.history_id}>
+                                                                <td style={styles.td}>{row.history_id}</td>
+                                                                <td style={styles.td}>{row.student_id}</td>
+                                                                <td style={styles.td}>{row.name}</td>
+                                                                <td style={styles.td}>{row.department}</td>
+                                                                <td style={styles.td}>{row.start_date}</td>
+                                                                <td style={styles.td}>{row.end_date}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            )}
+                        </section>
+
+                        {/* delete history */}
+                        <section style={styles.deleteSection}>
+                            <h3 style={styles.sectionTitle}>Delete history</h3>
+                            <p style={styles.hint}>Delete all entries with start_date before selected date.</p>
+                            <div style={styles.row}>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={beforeDate}
+                                    onChange={(e) => setBeforeDate(e.target.value)}
+                                    style={{ flex: 1 }}
+                                />
+                                <Button variant="danger" onClick={handleDeleteHistory} disabled={deleteLoading}>
+                                    {deleteLoading ? "Deleting…" : "Delete history"}
+                                </Button>
+                            </div>
+                            {deleteError   && <p style={{ color: "var(--danger)",  fontSize: "0.85rem", marginTop: "0.5rem" }}>{deleteError}</p>}
+                            {deleteSuccess && <p style={{ color: "var(--success)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{deleteSuccess}</p>}
+                        </section>
+
                     </div>
                 )}
             </section>
-            <section style={styles.deleteSection}>
-                <h3 style={styles.sectionTitle}>Delete history</h3>
-                <p style={styles.hint}>Delete all entries with `start_date` before selected date.</p>
-                <div style={styles.row}>
-                    <input
-                        type="date"
-                        className="form-control"
-                        value={beforeDate}
-                        onChange={(e) => setBeforeDate(e.target.value)}
-                        style={{ flex: 1 }}
-                    />
-                    <Button variant="danger" onClick={handleDeleteHistory} disabled={deleteLoading}>
-                        {deleteLoading ? "Deleting..." : "Delete history"}
-                    </Button>
-                </div>
-                {deleteError && <p style={{ color: "var(--danger)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{deleteError}</p>}
-                {deleteSuccess && <p style={{ color: "var(--success)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{deleteSuccess}</p>}
-            </section>
-                    </section>
-                </>
-            )}
 
         </div>
     );

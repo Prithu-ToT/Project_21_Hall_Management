@@ -8,6 +8,7 @@ const studentServiceRoutes = require("./routes/studentServiceRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminAllocationRoutes = require("./routes/adminAllocationRoutes");
 const adminServiceRoutes = require("./routes/adminServiceRoutes");
+const adminUnresolvedRoutes = require("./routes/adminUnresolvedRoutes");
 const sysAdminRoutes = require("./routes/sysAdminRoutes");  
 const { requireAuth, requireRole } = require("./authMiddleware");
 const app = express();
@@ -33,6 +34,7 @@ app.use("/student/services", requireRole("student"), studentServiceRoutes);
 app.use("/admin", requireRole("admin"), adminRoutes);
 app.use("/admin/allocation", requireRole("admin"), adminAllocationRoutes);
 app.use("/admin/service", requireRole("admin"), adminServiceRoutes);
+app.use("/admin/unresolved", requireRole("admin"), adminUnresolvedRoutes);
 
 app.use("/sysadmin", requireRole("sysadmin"), sysAdminRoutes);
 
