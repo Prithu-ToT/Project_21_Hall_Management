@@ -5,7 +5,10 @@ const asyncWrapper = require("../asyncWrapper");
 
 // GET /admin/allocation/rooms/:hallId
 router.get("/rooms/:hallId", asyncWrapper(async (req, res) => {
-    const { hallId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT room_id, room_number, capacity
          FROM room
@@ -18,7 +21,11 @@ router.get("/rooms/:hallId", asyncWrapper(async (req, res) => {
 
 // GET /admin/allocation/room-allocations/:hallId/:roomId
 router.get("/room-allocations/:hallId/:roomId", asyncWrapper(async (req, res) => {
-    const { hallId, roomId } = req.params;
+    const { roomId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT ha.allocation_id, ha.student_id, ha.status
          FROM hall_allocation ha
@@ -31,7 +38,11 @@ router.get("/room-allocations/:hallId/:roomId", asyncWrapper(async (req, res) =>
 
 // DELETE /admin/allocation/allocations/:hallId/:allocationId
 router.delete("/allocations/:hallId/:allocationId", asyncWrapper(async (req, res) => {
-    const { hallId, allocationId } = req.params;
+    const { allocationId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const del = await pool.query(
         `DELETE FROM hall_allocation ha
          USING room r
@@ -49,9 +60,13 @@ router.delete("/allocations/:hallId/:allocationId", asyncWrapper(async (req, res
 
 // POST /admin/allocation/allocations
 router.post("/allocations", asyncWrapper(async (req, res) => {
-    const { hallId, room_id, student_id } = req.body;
-    if (!hallId || !room_id || !student_id) {
-        return res.status(400).json({ message: "hallId, room_id, and student_id are required." });
+    const { room_id, student_id } = req.body;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
+    if (!room_id || !student_id) {
+        return res.status(400).json({ message: "room_id and student_id are required." });
     }
     const check = await pool.query(
         `SELECT r.room_id FROM room r
@@ -75,7 +90,11 @@ router.post("/allocations", asyncWrapper(async (req, res) => {
 
 // GET /admin/allocation/student-location/:hallId/:studentId
 router.get("/student-location/:hallId/:studentId", asyncWrapper(async (req, res) => {
-    const { hallId, studentId } = req.params;
+    const { studentId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT r.room_number
          FROM hall_allocation ha
@@ -93,7 +112,11 @@ router.get("/student-location/:hallId/:studentId", asyncWrapper(async (req, res)
 
 // GET /admin/allocation/history-room/:hallId/:roomId
 router.get("/history-room/:hallId/:roomId", asyncWrapper(async (req, res) => {
-    const { hallId, roomId } = req.params;
+    const { roomId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT ah.history_id, ah.student_id, ah.start_date, ah.end_date
          FROM allocation_history ah
@@ -107,7 +130,11 @@ router.get("/history-room/:hallId/:roomId", asyncWrapper(async (req, res) => {
 
 // GET /admin/allocation/history-student/:hallId/:studentId
 router.get("/history-student/:hallId/:studentId", asyncWrapper(async (req, res) => {
-    const { hallId, studentId } = req.params;
+    const { studentId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT ah.history_id, ah.room_id, r.room_number, ah.start_date, ah.end_date
          FROM allocation_history ah
@@ -121,8 +148,12 @@ router.get("/history-student/:hallId/:studentId", asyncWrapper(async (req, res) 
 
 // DELETE /admin/allocation/history-before/:hallId
 router.delete("/history-before/:hallId", asyncWrapper(async (req, res) => {
-    const { hallId } = req.params;
+    const hallId = req.user.hallId;
     const { beforeDate } = req.body;
+
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
 
     if (!beforeDate) {
         return res.status(400).json({ message: "beforeDate is required." });

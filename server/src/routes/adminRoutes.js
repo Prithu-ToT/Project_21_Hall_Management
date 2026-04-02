@@ -35,10 +35,15 @@ router.get("/hall-info/:hallName", asyncWrapper(async (req, res) => {
 
 // PATCH /admin/seat-fee — set or update seat_fee for hall
 router.patch("/seat-fee", asyncWrapper(async (req, res) => {
-    const { hallId, seatFee } = req.body;
+    const { seatFee } = req.body;
+    const hallId = req.user.hallId;
 
-    if (!hallId || seatFee == null) {
-        return res.status(400).json({ message: "hallId and seatFee are required." });
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
+
+    if (seatFee == null) {
+        return res.status(400).json({ message: "seatFee is required." });
     }
 
     const fee = parseFloat(seatFee);
@@ -63,9 +68,14 @@ router.patch("/seat-fee", asyncWrapper(async (req, res) => {
 
 // POST /admin/change-password
 router.post("/change-password", asyncWrapper(async (req, res) => {
-    const { hallId, currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword } = req.body;
+    const hallId = req.user.hallId;
 
-    if (!hallId || !currentPassword || !newPassword) {
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
+
+    if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: "All fields are required" });
     }
 

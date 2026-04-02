@@ -181,7 +181,7 @@ const AdminActionCenter = ({ hallId }) => {
                     <section>
                         <h3 style={styles.sectionTitle}>Search history by student</h3>
                         <section>
-                <h3 style={styles.sectionTitle}>Search history by student</h3>
+                
                 <div style={styles.row}>
                     <input
                         type="text"
@@ -227,7 +227,6 @@ const AdminActionCenter = ({ hallId }) => {
                         <h3 style={styles.sectionTitle}>Search history by room</h3>
                         
             <section>
-                <h3 style={styles.sectionTitle}>Search history by room</h3>
                 {roomsLoading && <p style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading rooms...</p>}
                 {roomsError && <p style={{ color: "var(--danger)", fontSize: "0.88rem" }}>{roomsError}</p>}
                 {!roomsLoading && !roomsError && (

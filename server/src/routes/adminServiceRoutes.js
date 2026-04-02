@@ -7,7 +7,10 @@ const asyncWrapper = require("../asyncWrapper");
 
 // GET /admin/service/names/:hallId
 router.get("/names/:hallId", asyncWrapper(async (req, res) => {
-    const { hallId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT DISTINCT rs.service_name
          FROM resident_service rs
@@ -22,8 +25,11 @@ router.get("/names/:hallId", asyncWrapper(async (req, res) => {
 
 // GET /admin/service/by-name/:hallId?name=
 router.get("/by-name/:hallId", asyncWrapper(async (req, res) => {
-    const { hallId } = req.params;
+    const hallId = req.user.hallId;
     const { name } = req.query;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     if (!name || !name.trim()) {
         return res.status(400).json({ message: "Query param 'name' is required." });
     }
@@ -50,7 +56,11 @@ router.get("/by-name/:hallId", asyncWrapper(async (req, res) => {
 
 // GET /admin/service/by-student/:hallId/:studentId
 router.get("/by-student/:hallId/:studentId", asyncWrapper(async (req, res) => {
-    const { hallId, studentId } = req.params;
+    const { studentId } = req.params;
+    const hallId = req.user.hallId;
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
     const result = await pool.query(
         `SELECT rs.service_name,
                 TO_CHAR(rs.service_period_start, 'DD-Mon-YYYY') AS service_period_start,
@@ -70,10 +80,15 @@ router.get("/by-student/:hallId/:studentId", asyncWrapper(async (req, res) => {
 
 // POST /admin/service — add service for one student (student_id resolves to allocation_id in this hall)
 router.post("/", asyncWrapper(async (req, res) => {
-    const { hallId, student_id, service_name, service_period_start, service_period_end, service_fee_amount } = req.body;
+    const { student_id, service_name, service_period_start, service_period_end, service_fee_amount } = req.body;
+    const hallId = req.user.hallId;
 
-    if (!hallId || !student_id || !service_name || !service_period_start || !service_period_end || service_fee_amount == null) {
-        return res.status(400).json({ message: "hallId, student_id, service_name, service_period_start, service_period_end, and service_fee_amount are required." });
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
+
+    if (!student_id || !service_name || !service_period_start || !service_period_end || service_fee_amount == null) {
+        return res.status(400).json({ message: "student_id, service_name, service_period_start, service_period_end, and service_fee_amount are required." });
     }
 
     const allocRes = await pool.query(
@@ -108,10 +123,15 @@ router.post("/", asyncWrapper(async (req, res) => {
 
 // POST /admin/service/add-for-all — add service to all allocations in this hall
 router.post("/add-for-all", asyncWrapper(async (req, res) => {
-    const { hallId, service_name, service_period_start, service_period_end, service_fee_amount } = req.body;
+    const { service_name, service_period_start, service_period_end, service_fee_amount } = req.body;
+    const hallId = req.user.hallId;
 
-    if (!hallId || !service_name || !service_period_start || !service_period_end || service_fee_amount == null) {
-        return res.status(400).json({ message: "hallId, service_name, service_period_start, service_period_end, and service_fee_amount are required." });
+    if (!hallId) {
+        return res.status(403).json({ message: "Hall access is not available for this token." });
+    }
+
+    if (!service_name || !service_period_start || !service_period_end || service_fee_amount == null) {
+        return res.status(400).json({ message: "service_name, service_period_start, service_period_end, and service_fee_amount are required." });
     }
 
     const fee = parseFloat(service_fee_amount);
