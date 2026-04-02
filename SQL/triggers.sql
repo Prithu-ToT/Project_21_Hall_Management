@@ -40,7 +40,7 @@ $$;
 CREATE OR REPLACE TRIGGER room_capasity_reached
 BEFORE INSERT ON hall_allocation
 FOR EACH ROW
-EXECUTE FUNCTION enforce_room_capasity();
+EXECUTE FUNCTION enforce_room_capacity();
 
 -------------------------------------------
 -- trigger for activating room after payment 
@@ -170,4 +170,32 @@ $$;
 CREATE OR REPLACE TRIGGER booking_validation
 BEFORE INSERT ON room_booking
 FOR EACH ROW
-  EXECUTE FUNCTION validade_booking();
+EXECUTE FUNCTION validade_booking();
+
+CREATE OR REPLACE FUNCTION validade_service ()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS
+$$
+
+DECLARE
+  allocation_status alloc_status;
+
+BEGIN
+  SELECT ha.status
+  INTO allocation_status
+  FROM hall_allocation ha
+  WHERE ha.allocation_id = NEW.allocation_id;
+
+  IF allocation_status = 'PENDING' THEN
+    RAISE EXCEPTION 'Hall seat fee is still pending';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER service_validation
+BEFORE INSERT ON resident_service
+FOR EACH ROW
+EXECUTE FUNCTION validade_service();
