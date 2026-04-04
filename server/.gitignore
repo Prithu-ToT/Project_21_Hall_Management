@@ -12,8 +12,7 @@ dist
 dist-ssr
 *.local
 .env
-package-lock.json
-package.json
+run_app.bat
 
 # Editor directories and files
 .vscode/*

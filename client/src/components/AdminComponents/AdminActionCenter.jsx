@@ -3,6 +3,7 @@ import { BackendServer } from "../../App";
 import { authFetch } from "../../authFetch";
 import Button from "../Button";
 import UnresolvedPaymentsCard from "./UnresolvedPaymentsCard";
+import AdminPendingAllocation from "./AdminPendingAllocation";
 
 const AdminActionCenter = ({ hallId }) => {
     const [rooms, setRooms] = useState([]);
@@ -27,8 +28,9 @@ const AdminActionCenter = ({ hallId }) => {
     const [deleteError, setDeleteError] = useState(null);
     const [deleteSuccess, setDeleteSuccess] = useState(null);
 
+    const [showPending, setShowPending] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
-    const [showUnresolved, setShowUnresolved] = useState(false);  // new
+    const [showUnresolved, setShowUnresolved] = useState(false);
 
     useEffect(() => {
         const loadRooms = async () => {
@@ -153,6 +155,21 @@ const AdminActionCenter = ({ hallId }) => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+            {/* ── Pending Allocations toggle ── */}
+            <section>
+                <Button
+                    variant={showPending ? "primary" : "outline-primary"}
+                    onClick={() => setShowPending(prev => !prev)}
+                    style={{ width: "100%", marginBottom: showPending ? "1rem" : 0 }}
+                >
+                    {showPending ? "Hide Pending Allocations" : "Show Pending Allocations"}
+                </Button>
+
+                {showPending && (
+                    <AdminPendingAllocation hallId={hallId} />
+                )}
+            </section>
 
             {/* ── Unresolved Payments toggle ── */}
             <section>

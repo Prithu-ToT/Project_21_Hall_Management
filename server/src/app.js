@@ -9,7 +9,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const adminAllocationRoutes = require("./routes/adminAllocationRoutes");
 const adminServiceRoutes = require("./routes/adminServiceRoutes");
 const adminUnresolvedRoutes = require("./routes/adminUnresolvedRoutes");
-const sysAdminRoutes = require("./routes/sysAdminRoutes");  
+const sysAdminRoutes = require("./routes/sysAdminRoutes"); 
 const { requireAuth, requireRole } = require("./authMiddleware");
 const app = express();
 
