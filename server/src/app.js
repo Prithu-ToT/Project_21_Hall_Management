@@ -27,7 +27,7 @@ app.use("/", authRoutes);   // this creates the token
 // token needs verification for the later endpoints
 app.use(requireAuth);
 
-app.use("/student", requireRole("student"), studentRoutes);
+app.use("/student", requireRole("student", "admin"), studentRoutes);
 app.use("/student/bookings", requireRole("student"), studentBookingRoutes);
 app.use("/student/services", requireRole("student"), studentServiceRoutes);
 
