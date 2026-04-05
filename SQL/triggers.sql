@@ -93,8 +93,6 @@ BEGIN
     SET status = 'ACTIVE'
     WHERE allocation_id = NEW.allocation_id;
 
-    INSERT INTO room_booking (student_id, room_id)
-    VALUES (v_student_id, v_room_id);
   END IF;
 
   RETURN NEW;
