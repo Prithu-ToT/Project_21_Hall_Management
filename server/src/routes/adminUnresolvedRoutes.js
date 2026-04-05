@@ -57,14 +57,12 @@ router.get("/services", asyncWrapper(async (req, res) => {
 
     const result = await pool.query(
         `SELECT
-            rs.service_id,
-            ha.student_id,
-            rs.service_name,
-            rs.service_fee_amount,
+            rs.service_id, ha.student_id, rs.service_name, rs.service_fee_amount,
             COALESCE(SUM(
                 CASE WHEN rsp.direction = 'STUDENT_TO_HALL' THEN rsp.amount_paid
                      ELSE -rsp.amount_paid END
             ), 0) AS net_paid
+
          FROM resident_service rs
          JOIN hall_allocation ha ON rs.allocation_id = ha.allocation_id
          JOIN room r ON ha.room_id = r.room_id
@@ -72,10 +70,6 @@ router.get("/services", asyncWrapper(async (req, res) => {
          WHERE r.hall_id = $1
          GROUP BY rs.service_id, ha.student_id, rs.service_name, rs.service_fee_amount
          HAVING COALESCE(SUM(
-                    CASE WHEN rsp.direction = 'STUDENT_TO_HALL' THEN rsp.amount_paid
-                         ELSE -rsp.amount_paid END
-                ), 0) > 0
-            AND COALESCE(SUM(
                     CASE WHEN rsp.direction = 'STUDENT_TO_HALL' THEN rsp.amount_paid
                          ELSE -rsp.amount_paid END
                 ), 0) != rs.service_fee_amount

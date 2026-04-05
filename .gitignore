@@ -13,6 +13,8 @@ dist-ssr
 *.local
 .env
 run_app.bat
+Presentation/
+server/src/auth_seed_presentation.js
 
 # Editor directories and files
 .vscode/*
